@@ -1,0 +1,93 @@
+-- The C compiler identification is GNU 4.8.5
+-- The CXX compiler identification is GNU 4.8.5
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Looking for pthread.h
+-- Looking for pthread.h - found
+-- Looking for pthread_create
+-- Looking for pthread_create - not found
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - found
+-- Found Threads: TRUE  
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build
+[ 33%] Building NVCC (Device) object CMakeFiles/main.dir/src/main_generated_main.cu.o
+[ 66%] Building NVCC (Device) object CMakeFiles/main.dir/src/main_generated_core.cu.o
+Scanning dependencies of target main
+[100%] Linking CXX executable main
+[100%] Built target main
+Small sample 0:
+---
+Search points:
+- [ 0.40 0.60 0.60 ]
+Reference points:
+- 0: [ 0.10 0.50 0.80 ]
+- 1: [ 1.00 1.00 0.50 ]
+Results:
+- 0 (0.374)
+cudaCallback: 0.001 ms
+
+
+Small sample 1:
+---
+Search points:
+- [ 0.60 0.90 0.40 ]
+- [ 0.80 0.70 0.10 ]
+Reference points:
+- 0: [ 0.10 0.60 0.70 ]
+- 1: [ 0.70 0.80 0.80 ]
+- 2: [ 0.80 0.80 0.60 ]
+- 3: [ 0.70 0.30 0.70 ]
+- 4: [ 0.10 0.50 0.30 ]
+- 5: [ 0.60 0.90 0.80 ]
+- 6: [ 0.20 1.00 0.30 ]
+- 7: [ 0.00 1.00 0.30 ]
+Results:
+- 2 (0.300)
+- 2 (0.510)
+cudaCallback: 0.001 ms
+
+
+Sample 2:
+---
+cudaCallback: 0.008 ms
+
+
+Sample 3:
+---
+cudaCallback: 0.398 ms
+
+
+Sample 4:
+---
+cudaCallback: 0.669 ms
+
+
+Sample 5:
+---
+cudaCallback: 2.913 ms
+
+
+Sample 6:
+---
+cudaCallback: 188.271 ms
+
+
+Sample 7:
+---
+cudaCallback: 699.186 ms
+
+

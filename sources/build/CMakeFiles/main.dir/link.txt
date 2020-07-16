@@ -1,0 +1,1 @@
+/usr/bin/c++  -Ofast -fopenmp  -rdynamic CMakeFiles/main.dir/src/main_generated_core.cu.o CMakeFiles/main.dir/src/main_generated_main.cu.o  -o main -Wl,-Bstatic -lcudart_static -Wl,-Bdynamic -lpthread -ldl -lrt 
