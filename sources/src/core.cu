@@ -495,6 +495,122 @@ namespace v5
 			*results = (int *)malloc(sizeof(int) * m));
 	}
 }; // namespace v5
+namespace v6
+{
+	static __global void
+	mat_inv_kernel(
+		const int m,
+		const int n,
+		const float *__restrict__ input,
+		float *__restrict__ output)
+	{
+		const int
+			nInd = threadIdx.x + blockIdx.x * blockDim.x,
+			mInd = threadIdx.y + blockIdx.y * blockDim.y;
+		if (nInd < n && mInd < m)
+		{
+			const float a = input[nInd * m + mInd];
+			output[nInd + mInd * n] = a;
+		}
+	}
+	template <int BLOCK_DIM_X>
+	static __global__ void
+	cudaCallbackKernel(
+		const int k,
+		const int m,
+		const int n,
+		const int result_size,
+		const float *__restrict__ searchPoints,
+		const float *__restrict__ referencePoints,
+		int *__restrict__ result)
+	{
+		const int ans_id = blockIdx.x + blockIdx.y * gridDim.x;
+		if (ans_id >= result_size)
+			return;
+		__shared__ float dis_s[BLOCK_DIM_X];
+		__shared__ int ind_s[BLOCK_DIM_X];
+		dis_s[threadIdx.x] = INFINITY;
+		for (int mInd = blockIdx.y, nInd = threadIdx.x + blockIdx.x * BLOCK_DIM_X;
+			 nInd < n;
+			 nInd += gridDim.x * BLOCK_DIM_X)
+		{
+			float dis = 0;
+			for (int kInd = 0; kInd < k; ++kInd)
+			{
+				const float d = searchPoints[kInd + mInd * k] - referencePoints[kInd + nInd * k];
+				dis += d * d;
+			}
+			if (dis_s[threadIdx.x] > dis)
+			{
+				dis_s[threadIdx.x] = dis;
+				ind_s[threadIdx.x] = nInd;
+			}
+		}
+		__syncthreads();
+		for (int offset = BLOCK_DIM_X >> 1; offset > 0; offset >>= 1)
+		{
+			if (threadIdx.x < offset)
+				if (dis_s[threadIdx.x] > dis_s[threadIdx.x ^ offset])
+				{
+					dis_s[threadIdx.x] = dis_s[threadIdx.x ^ offset];
+					ind_s[threadIdx.x] = ind_s[threadIdx.x ^ offset];
+				}
+			__syncthreads();
+		}
+		if (threadIdx.x == 0)
+			result[ans_id] = ind_s[0];
+	}
+	static void cudaCallback(
+		int k,
+		int m,
+		int n,
+		float *searchPoints,
+		float *referencePoints,
+		int **results)
+	{
+		thrust::device_vector<int> results_d(m);
+		thrust::device_vector<float> s_d(k * m), r_d(k * n);
+		{
+			thrust::device_vector<float>
+				ss_d(searchPoints, searchPoints + k * m),
+				rr_d(referencePoints, referencePoints + k * n);
+			const BLOCK_DIM_X = 32, BLOCK_DIM_Y = 32;
+			mat_inv_kernel<<<
+				dim3(divup(k, BLOCK_DIM_X), divup(m, BLOCK_DIM_Y)),
+				dim3(BLOCK_DIM_X, BLOCK_DIM_Y)>>>(
+				m,
+				k,
+				thrust::raw_pointer_cast(ss_d.data()),
+				thrust::raw_pointer_cast(s_d.data()));
+			mat_inv_kernel<<<
+				dim3(divup(k, BLOCK_DIM_X), divup(n, BLOCK_DIM_Y)),
+				dim3(BLOCK_DIM_X, BLOCK_DIM_Y)>>>(
+				n,
+				k,
+				thrust::raw_pointer_cast(rr_d.data()),
+				thrust::raw_pointer_cast(r_d.data()));
+		}
+		{
+			const int BLOCK_DIM_X = 1024;
+			//WuKTimer t1;
+			cudaCallbackKernel<
+				BLOCK_DIM_X><<<
+				dim3(results_d.size() / m, m),
+				BLOCK_DIM_X>>>(
+				k,
+				m,
+				n,
+				results_d.size(),
+				thrust::raw_pointer_cast(s_d.data()),
+				thrust::raw_pointer_cast(r_d.data()),
+				thrust::raw_pointer_cast(results_d.data()));
+		}
+		thrust::copy(
+			results_d.begin(),
+			results_d.begin() + m,
+			*results = (int *)malloc(sizeof(int) * m));
+	}
+}; // namespace v6
 struct WarmUP
 {
 	WarmUP(int k, int m, int n)
@@ -502,9 +618,11 @@ struct WarmUP
 		void (*cudaCallback[])(int, int, int, float *, float *, int **) = {
 			v0::cudaCallback,
 			v1::cudaCallback,
+			v2::cudaCallback,
 			v3::cudaCallback,
 			v4::cudaCallback,
-			v5::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
+			v5::cudaCallback,
+			v6::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
 		float *searchPoints = (float *)malloc(sizeof(float) * k * m);
 		float *referencePoints = (float *)malloc(sizeof(float) * k * n);
 
@@ -546,7 +664,8 @@ struct BenchMark
 			v2::cudaCallback,
 			v3::cudaCallback,
 			v4::cudaCallback,
-			v5::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
+			v5::cudaCallback,
+			v6::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
 		float *searchPoints = (float *)malloc(sizeof(float) * k * m);
 		float *referencePoints = (float *)malloc(sizeof(float) * k * n);
 
@@ -589,7 +708,7 @@ void cudaCallback(
 	float *referencePoints,
 	int **results)
 {
-	v5::cudaCallback(
+	v6::cudaCallback(
 		k,
 		m,
 		n,
