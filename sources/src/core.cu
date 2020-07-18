@@ -104,11 +104,11 @@ namespace v1
 			thrust::device_vector<float>
 				s_d(searchPoints, searchPoints + k * m),
 				r_d(referencePoints, referencePoints + k * n);
-			const int BLOCK_DIM_X = 1024;
+			const int BLOCK_DIM_X = 32, BLOCK_DIM_Y = 32;
 			//WuKTimer t1;
 			get_dis_kernel<<<
-				dim3(divup(n, BLOCK_DIM_X), m),
-				BLOCK_DIM_X>>>(
+				dim3(divup(n, BLOCK_DIM_X), divup(m, BLOCK_DIM_Y)),
+				dim3(BLOCK_DIM_X, BLOCK_DIM_Y)>>>(
 				k,
 				m,
 				n,
@@ -125,65 +125,6 @@ namespace v1
 	}
 }; // namespace v1
 namespace v2
-{
-	static __global__ void
-	get_dis_kernel(
-		const int k,
-		const int m,
-		const int n,
-		const float *__restrict__ searchPoints,
-		const float *__restrict__ referencePoints,
-		float *__restrict__ dis)
-	{
-		const int
-			nInd = threadIdx.x + blockIdx.x * blockDim.x,
-			mInd = threadIdx.y + blockIdx.y * blockDim.y;
-		if (nInd < n && mInd < m)
-		{
-			float ans = 0;
-			for (int kInd = 0; kInd < k; ++kInd)
-			{
-				const float d = searchPoints[kInd + mInd * k] - referencePoints[kInd + nInd * k];
-				ans += d * d;
-			}
-			dis[nInd + mInd * n] = ans;
-		}
-	}
-	static void cudaCallback(
-		int k,
-		int m,
-		int n,
-		float *searchPoints,
-		float *referencePoints,
-		int **results)
-	{
-		thrust::device_vector<float> dis_d(m * n);
-		{
-			thrust::device_vector<float>
-				s_d(searchPoints, searchPoints + k * m),
-				r_d(referencePoints, referencePoints + k * n);
-			const int BLOCK_DIM_X = 1024;
-			//WuKTimer t1;
-			get_dis_kernel<<<
-				dim3(divup(n, BLOCK_DIM_X), m),
-				BLOCK_DIM_X>>>(
-				k,
-				m,
-				n,
-				thrust::raw_pointer_cast(s_d.data()),
-				thrust::raw_pointer_cast(r_d.data()),
-				thrust::raw_pointer_cast(dis_d.data()));
-		}
-		*results = (int *)malloc(sizeof(int) * m);
-		{
-			//WuKTimer t2;
-#pragma omp parallel for
-			for (int i = 0; i < m; ++i)
-				(*results)[i] = thrust::min_element(dis_d.begin() + n * i, dis_d.begin() + n * i + n) - dis_d.begin() - n * i;
-		}
-	}
-}; // namespace v2
-namespace v3
 {
 	__global__ void static get_dis_kernel(
 		const int k,
@@ -260,11 +201,11 @@ namespace v3
 			thrust::device_vector<float>
 				s_d(searchPoints, searchPoints + k * m),
 				r_d(referencePoints, referencePoints + k * n);
-			const int BLOCK_DIM_X = 1024;
+			const int BLOCK_DIM_X = 32, BLOCK_DIM_Y = 32;
 			//WuKTimer t1;
 			get_dis_kernel<<<
-				dim3(divup(n, BLOCK_DIM_X), m),
-				BLOCK_DIM_X>>>(
+				dim3(divup(n, BLOCK_DIM_X), divup(m, BLOCK_DIM_Y)),
+				dim3(BLOCK_DIM_X, BLOCK_DIM_Y)>>>(
 				k,
 				m,
 				n,
@@ -291,8 +232,8 @@ namespace v3
 			results_d.begin() + m,
 			*results = (int *)malloc(sizeof(int) * m));
 	}
-}; // namespace v3
-namespace v4
+}; // namespace v2
+namespace v3
 {
 	template <int BLOCK_DIM_X>
 	static __global__ void
@@ -373,8 +314,8 @@ namespace v4
 			results_d.begin() + m,
 			*results = (int *)malloc(sizeof(int) * m));
 	}
-}; // namespace v4
-namespace v5
+}; // namespace v3
+namespace v4
 {
 	template <int BLOCK_DIM_X>
 	static __global__ void
@@ -454,8 +395,8 @@ namespace v5
 			results_d.begin() + m,
 			*results = (int *)malloc(sizeof(int) * m));
 	}
-}; // namespace v5
-namespace v6
+}; // namespace v4
+namespace v5
 {
 	template <int BLOCK_DIM_X>
 	static __global__ void
@@ -553,7 +494,7 @@ namespace v6
 			results_d.begin() + m,
 			*results = (int *)malloc(sizeof(int) * m));
 	}
-}; // namespace v6
+}; // namespace v5
 struct WarmUP
 {
 	WarmUP(int k, int m, int n)
@@ -561,11 +502,9 @@ struct WarmUP
 		void (*cudaCallback[])(int, int, int, float *, float *, int **) = {
 			v0::cudaCallback,
 			v1::cudaCallback,
-			v2::cudaCallback,
 			v3::cudaCallback,
 			v4::cudaCallback,
-			v5::cudaCallback,
-			v6::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
+			v5::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
 		float *searchPoints = (float *)malloc(sizeof(float) * k * m);
 		float *referencePoints = (float *)malloc(sizeof(float) * k * n);
 
@@ -607,8 +546,7 @@ struct BenchMark
 			v2::cudaCallback,
 			v3::cudaCallback,
 			v4::cudaCallback,
-			v5::cudaCallback,
-			v6::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
+			v5::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
 		float *searchPoints = (float *)malloc(sizeof(float) * k * m);
 		float *referencePoints = (float *)malloc(sizeof(float) * k * n);
 
@@ -632,15 +570,17 @@ struct BenchMark
 				cudaCallback[i](k, m, n, searchPoints, referencePoints, &result);
 			}
 			free(result);
+			fflush(stdout);
 		}
-		printf("\n\nFinish benchmark with (k, m, n) = %d, %d, %d:\n\n", k, m, n);
+		printf("\nFinish benchmark with (k, m, n) = (%d, %d, %d).\n\n", k, m, n);
 		free(searchPoints);
 		free(referencePoints);
 	}
 };
 static WarmUP warm_up(1, 1, 1);
 static BenchMark
-	benchmark1(16384, 1, 65536);
+	benchmark1(16384, 1, 65536),
+	benchmark1024(16, 1024, 65536);
 void cudaCallback(
 	int k,
 	int m,
@@ -649,7 +589,7 @@ void cudaCallback(
 	float *referencePoints,
 	int **results)
 {
-	v6::cudaCallback(
+	v5::cudaCallback(
 		k,
 		m,
 		n,
