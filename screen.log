@@ -35,14 +35,21 @@ make[2]: Entering directory '/home/jovyan/multicore-hw2/sources/build'
 make[2]: Leaving directory '/home/jovyan/multicore-hw2/sources/build'
 [100%] Built target main
 make[1]: Leaving directory '/home/jovyan/multicore-hw2/sources/build'
-0.012288
-0.013312
-0.009216
-0.012288
-0.009216
-0.012288
-0.012288
-0.013312
+
+
+Start benchmark with (k, m, n) = 16384, 1, 65536:
+
+Version 0: 1282.130737
+Version 1: 3169.808350
+Version 2: 1441.444824
+Version 3: 1367.071045
+Version 4: 1846.977417
+Version 5: 1924.013062
+Version 6: 1455.338013
+
+
+Finish benchmark with (k, m, n) = 16384, 1, 65536:
+
 Small sample 0:
 ---
 Search points:
@@ -52,7 +59,7 @@ Reference points:
 - 1: [ 1.00 1.00 0.50 ]
 Results:
 - 0 (0.374)
-cudaCallback: 0.483 ms
+cudaCallback: 0.768 ms
 
 
 Small sample 1:
@@ -72,36 +79,36 @@ Reference points:
 Results:
 - 2 (0.300)
 - 2 (0.510)
-cudaCallback: 0.412 ms
+cudaCallback: 0.536 ms
 
 
 Sample 2:
 ---
-cudaCallback: 0.402 ms
+cudaCallback: 0.560 ms
 
 
 Sample 3:
 ---
-cudaCallback: 2.159 ms
+cudaCallback: 2.633 ms
 
 
 Sample 4:
 ---
-cudaCallback: 1.634 ms
+cudaCallback: 1.702 ms
 
 
 Sample 5:
 ---
-cudaCallback: 0.358 ms
+cudaCallback: 0.390 ms
 
 
 Sample 6:
 ---
-cudaCallback: 1.849 ms
+cudaCallback: 1.793 ms
 
 
 Sample 7:
 ---
-cudaCallback: 4.058 ms
+cudaCallback: 3.843 ms
 
 

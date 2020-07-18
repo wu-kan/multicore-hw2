@@ -355,7 +355,7 @@ namespace v4
 				s_d(searchPoints, searchPoints + k * m),
 				r_d(referencePoints, referencePoints + k * n);
 			const int BLOCK_DIM_X = 1024;
-			WuKTimer t1;
+			//WuKTimer t1;
 			cudaCallbackKernel<
 				BLOCK_DIM_X><<<
 				dim3(results_d.size() / m, m),
@@ -437,7 +437,7 @@ namespace v5
 			thrust::device_vector<float>
 				r_d(referencePoints, referencePoints + k * n);
 			const int BLOCK_DIM_X = 1024;
-			WuKTimer t1;
+			//WuKTimer t1;
 			cudaCallbackKernel<
 				BLOCK_DIM_X><<<
 				dim3(results_d.size() / m, m),
@@ -554,23 +554,6 @@ namespace v6
 			*results = (int *)malloc(sizeof(int) * m));
 	}
 }; // namespace v6
-void cudaCallback(
-	int k,
-	int m,
-	int n,
-	float *searchPoints,
-	float *referencePoints,
-	int **results)
-{
-	v6::cudaCallback(
-		k,
-		m,
-		n,
-		searchPoints,
-		referencePoints,
-		results);
-}
-
 struct WarmUP
 {
 	WarmUP(int k, int m, int n)
@@ -584,7 +567,7 @@ struct WarmUP
 			v5::cudaCallback,
 			v6::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
 		float *searchPoints = (float *)malloc(sizeof(float) * k * m);
-		float *referencePoints = (float *)malloc(sizeof(float) * k * m);
+		float *referencePoints = (float *)malloc(sizeof(float) * k * n);
 
 #pragma omp parallel
 		{
@@ -614,5 +597,63 @@ struct WarmUP
 		free(referencePoints);
 	}
 };
+struct BenchMark
+{
+	BenchMark(int k, int m, int n)
+	{
+		void (*cudaCallback[])(int, int, int, float *, float *, int **) = {
+			v0::cudaCallback,
+			v1::cudaCallback,
+			v2::cudaCallback,
+			v3::cudaCallback,
+			v4::cudaCallback,
+			v5::cudaCallback,
+			v6::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
+		float *searchPoints = (float *)malloc(sizeof(float) * k * m);
+		float *referencePoints = (float *)malloc(sizeof(float) * k * n);
 
+#pragma omp parallel
+		{
+			unsigned seed = omp_get_thread_num(); //每个线程使用不同的随机数种子
+#pragma omp for
+			for (int i = 0; i < k * m; ++i)
+				searchPoints[i] = rand_r(&seed) / double(RAND_MAX); //使用线程安全的随机数函数
+#pragma omp for
+			for (int i = 0; i < k * n; ++i)
+				referencePoints[i] = rand_r(&seed) / double(RAND_MAX);
+		}
+		printf("\n\nStart benchmark with (k, m, n) = %d, %d, %d:\n\n", k, m, n); //开始benchnmark
+		for (int i = 0; i < sizeof(cudaCallback) / sizeof(cudaCallback[0]); ++i)
+		{
+			int *result;
+			printf("Version %d: ", i);
+			{
+				WuKTimer t1;
+				cudaCallback[i](k, m, n, searchPoints, referencePoints, &result);
+			}
+			free(result);
+		}
+		printf("\n\nFinish benchmark with (k, m, n) = %d, %d, %d:\n\n", k, m, n);
+		free(searchPoints);
+		free(referencePoints);
+	}
+};
 static WarmUP warm_up(1, 1, 1);
+static BenchMark
+	benchmark1(16384, 1, 65536);
+void cudaCallback(
+	int k,
+	int m,
+	int n,
+	float *searchPoints,
+	float *referencePoints,
+	int **results)
+{
+	v6::cudaCallback(
+		k,
+		m,
+		n,
+		searchPoints,
+		referencePoints,
+		results);
+}
