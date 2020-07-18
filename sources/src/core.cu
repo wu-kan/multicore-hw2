@@ -2,6 +2,8 @@
 #include <thrust/device_vector.h>
 #include "core.h"
 
+__constant__ float const_mem[(64 << 10) / sizeof(float)];
+
 struct WuKTimer
 {
 	cudaEvent_t beg, end;
@@ -375,6 +377,87 @@ namespace v4
 			*results = (int *)malloc(sizeof(int) * m));
 	}
 }; // namespace v4
+namespace v5
+{
+	template <int BLOCK_DIM_X>
+	__global__ void
+	cudaCallbackKernel(
+		const int k,
+		const int m,
+		const int n,
+		const int result_size,
+		const float *__restrict__ referencePoints,
+		int *__restrict__ result)
+	{
+		const int ans_id = blockIdx.x + blockIdx.y * gridDim.x;
+		if (ans_id >= result_size)
+			return;
+		__shared__ float dis_s[BLOCK_DIM_X];
+		__shared__ int ind_s[BLOCK_DIM_X];
+		dis_s[threadIdx.x] = INFINITY;
+		for (int mInd = blockIdx.y, nInd = threadIdx.x + blockIdx.x * BLOCK_DIM_X;
+			 nInd < n;
+			 nInd += gridDim.x * BLOCK_DIM_X)
+		{
+			float dis = 0;
+			for (int kInd = 0; kInd < k; ++kInd)
+			{
+				const float d = const_mem[kInd + mInd * k] - referencePoints[kInd + nInd * k];
+				dis += d * d;
+			}
+			if (dis_s[threadIdx.x] > dis)
+			{
+				dis_s[threadIdx.x] = dis;
+				ind_s[threadIdx.x] = nInd;
+			}
+		}
+		__syncthreads();
+		for (int offset = BLOCK_DIM_X >> 1; offset > 0; offset >>= 1)
+		{
+			if (threadIdx.x < offset)
+				if (dis_s[threadIdx.x] > dis_s[threadIdx.x ^ offset])
+				{
+					dis_s[threadIdx.x] = dis_s[threadIdx.x ^ offset];
+					ind_s[threadIdx.x] = ind_s[threadIdx.x ^ offset];
+				}
+			__syncthreads();
+		}
+		if (threadIdx.x == 0)
+			result[ans_id] = ind_s[0];
+	}
+	void cudaCallback(
+		int k,
+		int m,
+		int n,
+		float *searchPoints,
+		float *referencePoints,
+		int **results)
+	{
+		assert(k * m <= (64 << 10) / sizeof(float));
+		CHECK(cudaMemcpyToSymbol(const_mem, searchPoints, sizeof(float) * k * m));
+		thrust::device_vector<int> results_d(m);
+		{
+			thrust::device_vector<float>
+				r_d(referencePoints, referencePoints + k * n);
+			const int BLOCK_DIM_X = 1024;
+			WuKTimer t1;
+			cudaCallbackKernel<
+				BLOCK_DIM_X><<<
+				dim3(results_d.size() / m, m),
+				BLOCK_DIM_X>>>(
+				k,
+				m,
+				n,
+				results_d.size(),
+				thrust::raw_pointer_cast(r_d.data()),
+				thrust::raw_pointer_cast(results_d.data()));
+		}
+		thrust::copy(
+			results_d.begin(),
+			results_d.begin() + m,
+			*results = (int *)malloc(sizeof(int) * m));
+	}
+}; // namespace v5
 void cudaCallback(
 	int k,
 	int m,
@@ -383,7 +466,7 @@ void cudaCallback(
 	float *referencePoints,
 	int **results)
 {
-	v4::cudaCallback(
+	v5::cudaCallback(
 		k,
 		m,
 		n,

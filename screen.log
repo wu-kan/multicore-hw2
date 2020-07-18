@@ -45,7 +45,7 @@ Reference points:
 0.009216
 Results:
 - 0 (0.374)
-cudaCallback: 409.753 ms
+cudaCallback: 478.272 ms
 
 
 Small sample 1:
@@ -62,46 +62,46 @@ Reference points:
 - 5: [ 0.60 0.90 0.80 ]
 - 6: [ 0.20 1.00 0.30 ]
 - 7: [ 0.00 1.00 0.30 ]
-0.007168
+0.009216
 Results:
 - 2 (0.300)
 - 2 (0.510)
-cudaCallback: 0.337 ms
+cudaCallback: 0.372 ms
 
 
 Sample 2:
 ---
-0.007168
-cudaCallback: 0.326 ms
+0.008192
+cudaCallback: 0.364 ms
 
 
 Sample 3:
 ---
-0.045760
-cudaCallback: 0.679 ms
+0.044320
+cudaCallback: 0.694 ms
 
 
 Sample 4:
 ---
-0.451168
-cudaCallback: 1.978 ms
+0.425248
+cudaCallback: 1.946 ms
 
 
 Sample 5:
 ---
-0.027648
-cudaCallback: 0.359 ms
+0.026624
+cudaCallback: 0.352 ms
 
 
 Sample 6:
 ---
-0.398528
-cudaCallback: 0.982 ms
+0.389632
+cudaCallback: 0.954 ms
 
 
 Sample 7:
 ---
-5.822912
-cudaCallback: 7.335 ms
+5.853088
+cudaCallback: 7.353 ms
 
 
