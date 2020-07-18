@@ -1,6 +1,27 @@
 #include "core.h"
 #include <thrust/device_vector.h>
-
+struct WuKTimer
+{
+    cudaEvent_t beg, end;
+    WuKTimer()
+    {
+        cudaEventCreate(&beg);
+        cudaEventCreate(&end);
+        cudaEventRecord(beg);
+    }
+    ~WuKTimer()
+    {
+        cudaEventRecord(end);
+        cudaEventSynchronize(beg);
+        cudaEventSynchronize(end);
+        float elapsed_time;
+        cudaEventElapsedTime(
+            &elapsed_time,
+            beg,
+            end);
+        printf("%f\n", elapsed_time);
+    }
+};
 namespace v0
 {
     void cudaCallback(
@@ -55,17 +76,17 @@ namespace v1
         float *__restrict__ dis)
     {
         const int
-            n_id = threadIdx.x + blockIdx.x * blockDim.x,
-            m_id = threadIdx.y + blockIdx.y * blockDim.y;
-        if (n_id < n && m_id < m)
+            nInd = threadIdx.x + blockIdx.x * blockDim.x,
+            mInd = threadIdx.y + blockIdx.y * blockDim.y;
+        if (nInd < n && mInd < m)
         {
             float ans = 0;
-            for (int i = 0; i < k; ++i)
+            for (int kInd = 0; kInd < k; ++kInd)
             {
-                const float d = searchPoints[i + m_id * k] - referencePoints[i + n_id * k];
+                const float d = searchPoints[kInd + mInd * k] - referencePoints[kInd + nInd * k];
                 ans += d * d;
             }
-            dis[n_id + m_id * n] = ans;
+            dis[nInd + mInd * n] = ans;
         }
     }
     void cudaCallback(
@@ -81,20 +102,85 @@ namespace v1
             r_d(referencePoints, referencePoints + k * n),
             dis_d(m * n);
         const int BLOCK_DIM_X = 32, BLOCK_DIM_Y = 32;
-        get_dis_kernel<<<
-            dim3(divup(n, BLOCK_DIM_X), divup(m, BLOCK_DIM_Y)),
-            dim3(BLOCK_DIM_X, BLOCK_DIM_Y)>>>(
-            k,
-            m,
-            n,
-            thrust::raw_pointer_cast(s_d.data()),
-            thrust::raw_pointer_cast(r_d.data()),
-            thrust::raw_pointer_cast(dis_d.data()));
+        {
+            WuKTimer t1;
+            get_dis_kernel<<<
+                dim3(divup(n, BLOCK_DIM_X), divup(m, BLOCK_DIM_Y)),
+                dim3(BLOCK_DIM_X, BLOCK_DIM_Y)>>>(
+                k,
+                m,
+                n,
+                thrust::raw_pointer_cast(s_d.data()),
+                thrust::raw_pointer_cast(r_d.data()),
+                thrust::raw_pointer_cast(dis_d.data()));
+        }
         *results = (int *)malloc(sizeof(int) * m);
-        for (int i = 0; i < m; ++i)
-            (*results)[i] = thrust::min_element(dis_d.begin() + n * i, dis_d.begin() + n * i + n) - dis_d.begin() - n * i;
+        {
+            WuKTimer t2;
+            for (int i = 0; i < m; ++i)
+                (*results)[i] = thrust::min_element(dis_d.begin() + n * i, dis_d.begin() + n * i + n) - dis_d.begin() - n * i;
+        }
     }
 }; // namespace v1
+namespace v2
+{
+    __global__ void
+    get_dis_kernel(
+        const int k,
+        const int m,
+        const int n,
+        const float *__restrict__ searchPoints,
+        const float *__restrict__ referencePoints,
+        float *__restrict__ dis)
+    {
+        const int
+            nInd = threadIdx.x + blockIdx.x * blockDim.x,
+            mInd = threadIdx.y + blockIdx.y * blockDim.y;
+        if (nInd < n && mInd < m)
+        {
+            float ans = 0;
+            for (int kInd = 0; kInd < k; ++kInd)
+            {
+                const float d = searchPoints[kInd + mInd * k] - referencePoints[kInd + nInd * k];
+                ans += d * d;
+            }
+            dis[nInd + mInd * n] = ans;
+        }
+    }
+    void cudaCallback(
+        int k,
+        int m,
+        int n,
+        float *searchPoints,
+        float *referencePoints,
+        int **results)
+    {
+        thrust::device_vector<float>
+            s_d(searchPoints, searchPoints + k * m),
+            r_d(referencePoints, referencePoints + k * n),
+            dis_d(m * n);
+        const int BLOCK_DIM_X = 32, BLOCK_DIM_Y = 32;
+        {
+            WuKTimer t1;
+            get_dis_kernel<<<
+                dim3(divup(n, BLOCK_DIM_X), divup(m, BLOCK_DIM_Y)),
+                dim3(BLOCK_DIM_X, BLOCK_DIM_Y)>>>(
+                k,
+                m,
+                n,
+                thrust::raw_pointer_cast(s_d.data()),
+                thrust::raw_pointer_cast(r_d.data()),
+                thrust::raw_pointer_cast(dis_d.data()));
+        }
+        *results = (int *)malloc(sizeof(int) * m);
+        {
+            WuKTimer t2;
+#pragma omp parallel for
+            for (int i = 0; i < m; ++i)
+                (*results)[i] = thrust::min_element(dis_d.begin() + n * i, dis_d.begin() + n * i + n) - dis_d.begin() - n * i;
+        }
+    }
+}; // namespace v2
 void cudaCallback(
     int k,
     int m,
