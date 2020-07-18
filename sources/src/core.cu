@@ -223,15 +223,15 @@ namespace v3
 		__shared__ float dis_s[BLOCK_DIM_X];
 		__shared__ int ind_s[BLOCK_DIM_X];
 		dis_s[threadIdx.x] = INFINITY;
-		for (int global_id = threadIdx.x + blockIdx.x * BLOCK_DIM_X;
-			 global_id < n;
-			 global_id += gridDim.x * BLOCK_DIM_X)
+		for (int nInd = threadIdx.x + blockIdx.x * BLOCK_DIM_X;
+			 nInd < n;
+			 nInd += gridDim.x * BLOCK_DIM_X)
 		{
-			const float d = dis[global_id + blockIdx.y * n];
+			const float d = dis[nInd + blockIdx.y * n];
 			if (dis_s[threadIdx.x] > d)
 			{
 				dis_s[threadIdx.x] = d;
-				ind_s[threadIdx.x] = global_id;
+				ind_s[threadIdx.x] = nInd;
 			}
 		}
 		__syncthreads();
@@ -262,7 +262,7 @@ namespace v3
 				s_d(searchPoints, searchPoints + k * m),
 				r_d(referencePoints, referencePoints + k * n);
 			const int BLOCK_DIM_X = 1024;
-			WuKTimer t1;
+			//WuKTimer t1;
 			get_dis_kernel<<<
 				dim3(divup(n, BLOCK_DIM_X), m),
 				BLOCK_DIM_X>>>(
@@ -276,7 +276,7 @@ namespace v3
 		thrust::device_vector<int> results_d(m);
 		{
 			const int BLOCK_DIM_X = 1024;
-			WuKTimer t2;
+			//WuKTimer t2;
 			get_min_kernel<
 				BLOCK_DIM_X><<<
 				dim3(results_d.size() / m, m),
@@ -293,6 +293,88 @@ namespace v3
 			*results = (int *)malloc(sizeof(int) * m));
 	}
 }; // namespace v3
+namespace v4
+{
+	template <int BLOCK_DIM_X>
+	__global__ void
+	cudaCallbackKernel(
+		const int k,
+		const int m,
+		const int n,
+		const int result_size,
+		const float *__restrict__ searchPoints,
+		const float *__restrict__ referencePoints,
+		int *__restrict__ result)
+	{
+		const int ans_id = blockIdx.x + blockIdx.y * gridDim.x;
+		if (ans_id >= result_size)
+			return;
+		__shared__ float dis_s[BLOCK_DIM_X];
+		__shared__ int ind_s[BLOCK_DIM_X];
+		dis_s[threadIdx.x] = INFINITY;
+		for (int mInd = blockIdx.y, nInd = threadIdx.x + blockIdx.x * BLOCK_DIM_X;
+			 nInd < n;
+			 nInd += gridDim.x * BLOCK_DIM_X)
+		{
+			float dis = 0;
+			for (int kInd = 0; kInd < k; ++kInd)
+			{
+				const float d = searchPoints[kInd + mInd * k] - referencePoints[kInd + nInd * k];
+				dis += d * d;
+			}
+			if (dis_s[threadIdx.x] > dis)
+			{
+				dis_s[threadIdx.x] = dis;
+				ind_s[threadIdx.x] = nInd;
+			}
+		}
+		__syncthreads();
+		for (int offset = BLOCK_DIM_X >> 1; offset > 0; offset >>= 1)
+		{
+			if (threadIdx.x < offset)
+				if (dis_s[threadIdx.x] > dis_s[threadIdx.x ^ offset])
+				{
+					dis_s[threadIdx.x] = dis_s[threadIdx.x ^ offset];
+					ind_s[threadIdx.x] = ind_s[threadIdx.x ^ offset];
+				}
+			__syncthreads();
+		}
+		if (threadIdx.x == 0)
+			result[ans_id] = ind_s[0];
+	}
+	void cudaCallback(
+		int k,
+		int m,
+		int n,
+		float *searchPoints,
+		float *referencePoints,
+		int **results)
+	{
+		thrust::device_vector<int> results_d(m);
+		{
+			thrust::device_vector<float>
+				s_d(searchPoints, searchPoints + k * m),
+				r_d(referencePoints, referencePoints + k * n);
+			const int BLOCK_DIM_X = 1024;
+			WuKTimer t1;
+			cudaCallbackKernel<
+				BLOCK_DIM_X><<<
+				dim3(results_d.size() / m, m),
+				BLOCK_DIM_X>>>(
+				k,
+				m,
+				n,
+				results_d.size(),
+				thrust::raw_pointer_cast(s_d.data()),
+				thrust::raw_pointer_cast(r_d.data()),
+				thrust::raw_pointer_cast(results_d.data()));
+		}
+		thrust::copy(
+			results_d.begin(),
+			results_d.begin() + m,
+			*results = (int *)malloc(sizeof(int) * m));
+	}
+}; // namespace v4
 void cudaCallback(
 	int k,
 	int m,
@@ -301,7 +383,7 @@ void cudaCallback(
 	float *referencePoints,
 	int **results)
 {
-	v3::cudaCallback(
+	v4::cudaCallback(
 		k,
 		m,
 		n,
