@@ -497,7 +497,7 @@ namespace v5
 }; // namespace v5
 namespace v6
 {
-	static __global void
+	static __global__ void
 	mat_inv_kernel(
 		const int m,
 		const int n,
@@ -537,7 +537,7 @@ namespace v6
 			float dis = 0;
 			for (int kInd = 0; kInd < k; ++kInd)
 			{
-				const float d = searchPoints[kInd + mInd * k] - referencePoints[kInd + nInd * k];
+				const float d = searchPoints[kInd * m + mInd] - referencePoints[kInd * n + nInd];
 				dis += d * d;
 			}
 			if (dis_s[threadIdx.x] > dis)
@@ -574,19 +574,19 @@ namespace v6
 			thrust::device_vector<float>
 				ss_d(searchPoints, searchPoints + k * m),
 				rr_d(referencePoints, referencePoints + k * n);
-			const BLOCK_DIM_X = 32, BLOCK_DIM_Y = 32;
+			const int BLOCK_DIM_X = 32, BLOCK_DIM_Y = 32;
 			mat_inv_kernel<<<
-				dim3(divup(k, BLOCK_DIM_X), divup(m, BLOCK_DIM_Y)),
+				dim3(divup(m, BLOCK_DIM_X), divup(k, BLOCK_DIM_Y)),
 				dim3(BLOCK_DIM_X, BLOCK_DIM_Y)>>>(
-				m,
 				k,
+				m,
 				thrust::raw_pointer_cast(ss_d.data()),
 				thrust::raw_pointer_cast(s_d.data()));
 			mat_inv_kernel<<<
-				dim3(divup(k, BLOCK_DIM_X), divup(n, BLOCK_DIM_Y)),
+				dim3(divup(n, BLOCK_DIM_X), divup(k, BLOCK_DIM_Y)),
 				dim3(BLOCK_DIM_X, BLOCK_DIM_Y)>>>(
-				n,
 				k,
+				n,
 				thrust::raw_pointer_cast(rr_d.data()),
 				thrust::raw_pointer_cast(r_d.data()));
 		}
