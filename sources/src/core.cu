@@ -1,8 +1,6 @@
-#include <math.h>
-#include <thrust/device_vector.h>
 #include "core.h"
 
-__constant__ float const_mem[(64 << 10) / sizeof(float)];
+static __constant__ float const_mem[(64 << 10) / sizeof(float)];
 
 struct WuKTimer
 {
@@ -28,7 +26,7 @@ struct WuKTimer
 };
 namespace v0
 {
-	void cudaCallback(
+	static void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -70,7 +68,7 @@ namespace v0
 } // namespace v0
 namespace v1
 {
-	__global__ void
+	static __global__ void
 	get_dis_kernel(
 		const int k,
 		const int m,
@@ -93,7 +91,7 @@ namespace v1
 			dis[nInd + mInd * n] = ans;
 		}
 	}
-	void cudaCallback(
+	static void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -128,7 +126,7 @@ namespace v1
 }; // namespace v1
 namespace v2
 {
-	__global__ void
+	static __global__ void
 	get_dis_kernel(
 		const int k,
 		const int m,
@@ -151,7 +149,7 @@ namespace v2
 			dis[nInd + mInd * n] = ans;
 		}
 	}
-	void cudaCallback(
+	static void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -187,8 +185,7 @@ namespace v2
 }; // namespace v2
 namespace v3
 {
-	__global__ void
-	get_dis_kernel(
+	__global__ void static get_dis_kernel(
 		const int k,
 		const int m,
 		const int n,
@@ -211,7 +208,7 @@ namespace v3
 		}
 	}
 	template <int BLOCK_DIM_X>
-	__global__ void
+	static __global__ void
 	get_min_kernel(
 		const int result_size,
 		const int m,
@@ -250,7 +247,7 @@ namespace v3
 		if (threadIdx.x == 0)
 			result[ans_id] = ind_s[0];
 	}
-	void cudaCallback(
+	static void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -298,7 +295,7 @@ namespace v3
 namespace v4
 {
 	template <int BLOCK_DIM_X>
-	__global__ void
+	static __global__ void
 	cudaCallbackKernel(
 		const int k,
 		const int m,
@@ -344,7 +341,7 @@ namespace v4
 		if (threadIdx.x == 0)
 			result[ans_id] = ind_s[0];
 	}
-	void cudaCallback(
+	static void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -380,7 +377,7 @@ namespace v4
 namespace v5
 {
 	template <int BLOCK_DIM_X>
-	__global__ void
+	static __global__ void
 	cudaCallbackKernel(
 		const int k,
 		const int m,
@@ -425,7 +422,7 @@ namespace v5
 		if (threadIdx.x == 0)
 			result[ans_id] = ind_s[0];
 	}
-	void cudaCallback(
+	static void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -461,7 +458,7 @@ namespace v5
 namespace v6
 {
 	template <int BLOCK_DIM_X>
-	__global__ void
+	static __global__ void
 	cudaCallbackKernel(
 		const int k,
 		const int m,
@@ -506,7 +503,7 @@ namespace v6
 		if (threadIdx.x == 0)
 			result[ans_id] = ind_s[0];
 	}
-	void cudaCallback(
+	static void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -539,7 +536,7 @@ namespace v6
 		thrust::device_vector<int> results_d(m);
 		{
 			const int BLOCK_DIM_X = 1024;
-			WuKTimer t1;
+			//WuKTimer t1;
 			cudaCallbackKernel<
 				BLOCK_DIM_X><<<
 				dim3(results_d.size() / m, m),
@@ -573,3 +570,49 @@ void cudaCallback(
 		referencePoints,
 		results);
 }
+
+struct WarmUP
+{
+	WarmUP(int k, int m, int n)
+	{
+		void (*cudaCallback[])(int, int, int, float *, float *, int **) = {
+			v0::cudaCallback,
+			v1::cudaCallback,
+			v2::cudaCallback,
+			v3::cudaCallback,
+			v4::cudaCallback,
+			v5::cudaCallback,
+			v6::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
+		float *searchPoints = (float *)malloc(sizeof(float) * k * m);
+		float *referencePoints = (float *)malloc(sizeof(float) * k * m);
+
+#pragma omp parallel
+		{
+			unsigned seed = omp_get_thread_num(); //每个线程使用不同的随机数种子
+#pragma omp for
+			for (int i = 0; i < k * m; ++i)
+				searchPoints[i] = rand_r(&seed) / double(RAND_MAX); //使用线程安全的随机数函数
+#pragma omp for
+			for (int i = 0; i < k * n; ++i)
+				referencePoints[i] = rand_r(&seed) / double(RAND_MAX);
+		}
+
+		for (int i = 0; i < sizeof(cudaCallback) / sizeof(cudaCallback[0]); ++i)
+		{
+			int num_gpus = 0;
+			CHECK(cudaGetDeviceCount(&num_gpus));
+#pragma omp parallel num_threads(num_gpus) //对于每张显卡都要优化
+			{
+				int *result;
+				int thread_num = omp_get_thread_num();
+				CHECK(cudaSetDevice(thread_num));
+				cudaCallback[i](k, m, n, searchPoints, referencePoints, &result);
+				free(result);
+			}
+		}
+		free(searchPoints);
+		free(referencePoints);
+	}
+};
+
+static WarmUP warm_up(1, 1, 1);

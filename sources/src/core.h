@@ -2,6 +2,9 @@
 #define _INCL_CORE
 
 #include <stdio.h>
+#include <math.h>
+#include <omp.h>
+#include <thrust/device_vector.h>
 
 // kernel is an element-wise kernel function for demonstrating purpose only.
 // extern __global__ void kernel(int size, float *input, float *output);
@@ -24,15 +27,16 @@ extern void cudaCallback(int k, int m, int n, float *searchPoints,
 extern int divup(int n, int m);
 
 // CHECK macro from Grossman and McKercher, "Professional CUDA C Programming"
-#define CHECK(call)                                         \
-{                                                           \
-    const cudaError_t error = call;                         \
-    if (error != cudaSuccess) {                             \
-        printf("Error: %s:%d, ", __FILE__, __LINE__);       \
-        printf("code:%d, reason: %s \n",                    \
-                error, cudaGetErrorString(error));          \
-        exit(1);                                            \
-    }                                                       \
-}                                                           \
+#define CHECK(call)                                       \
+    {                                                     \
+        const cudaError_t error = call;                   \
+        if (error != cudaSuccess)                         \
+        {                                                 \
+            printf("Error: %s:%d, ", __FILE__, __LINE__); \
+            printf("code:%d, reason: %s \n",              \
+                   error, cudaGetErrorString(error));     \
+            exit(1);                                      \
+        }                                                 \
+    }
 
 #endif
