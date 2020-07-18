@@ -301,7 +301,7 @@ void cudaCallback(
 	float *referencePoints,
 	int **results)
 {
-	v2::cudaCallback(
+	v3::cudaCallback(
 		k,
 		m,
 		n,
