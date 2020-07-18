@@ -458,6 +458,105 @@ namespace v5
 			*results = (int *)malloc(sizeof(int) * m));
 	}
 }; // namespace v5
+namespace v6
+{
+	template <int BLOCK_DIM_X>
+	__global__ void
+	cudaCallbackKernel(
+		const int k,
+		const int m,
+		const int n,
+		const int result_size,
+		cudaTextureObject_t texObj, //使用纹理对象
+		int *__restrict__ result)
+	{
+		const int ans_id = blockIdx.x + blockIdx.y * gridDim.x;
+		if (ans_id >= result_size)
+			return;
+		__shared__ float dis_s[BLOCK_DIM_X];
+		__shared__ int ind_s[BLOCK_DIM_X];
+		dis_s[threadIdx.x] = INFINITY;
+		for (int mInd = blockIdx.y, nInd = threadIdx.x + blockIdx.x * BLOCK_DIM_X;
+			 nInd < n;
+			 nInd += gridDim.x * BLOCK_DIM_X)
+		{
+			float dis = 0;
+			for (int kInd = 0; kInd < k; ++kInd)
+			{
+				const float d = const_mem[kInd + mInd * k] - tex2D<float>(texObj, kInd, nInd);
+				dis += d * d;
+			}
+			if (dis_s[threadIdx.x] > dis)
+			{
+				dis_s[threadIdx.x] = dis;
+				ind_s[threadIdx.x] = nInd;
+			}
+		}
+		__syncthreads();
+		for (int offset = BLOCK_DIM_X >> 1; offset > 0; offset >>= 1)
+		{
+			if (threadIdx.x < offset)
+				if (dis_s[threadIdx.x] > dis_s[threadIdx.x ^ offset])
+				{
+					dis_s[threadIdx.x] = dis_s[threadIdx.x ^ offset];
+					ind_s[threadIdx.x] = ind_s[threadIdx.x ^ offset];
+				}
+			__syncthreads();
+		}
+		if (threadIdx.x == 0)
+			result[ans_id] = ind_s[0];
+	}
+	void cudaCallback(
+		int k,
+		int m,
+		int n,
+		float *searchPoints,
+		float *referencePoints,
+		int **results)
+	{
+		assert(k * m <= (64 << 10) / sizeof(float));
+		CHECK(cudaMemcpyToSymbol(const_mem, searchPoints, sizeof(float) * k * m));
+		cudaArray *cuArray;
+		cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
+		CHECK(cudaMallocArray(&cuArray, &channelDesc, k, n));
+		CHECK(cudaMemcpy2DToArray(cuArray, 0, 0, referencePoints, sizeof(float) * k, sizeof(float) * k, n, cudaMemcpyHostToDevice));
+
+		// 绑定纹理到cudaArray上
+		struct cudaResourceDesc resDesc;
+		memset(&resDesc, 0, sizeof(resDesc));
+		resDesc.resType = cudaResourceTypeArray;
+		resDesc.res.array.array = cuArray;
+
+		// 设置纹理为只读
+		struct cudaTextureDesc texDesc;
+		memset(&texDesc, 0, sizeof(texDesc));
+		texDesc.readMode = cudaReadModeElementType;
+
+		// 创建纹理对象
+		cudaTextureObject_t texObj = 0;
+		CHECK(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL));
+
+		thrust::device_vector<int> results_d(m);
+		{
+			const int BLOCK_DIM_X = 1024;
+			WuKTimer t1;
+			cudaCallbackKernel<
+				BLOCK_DIM_X><<<
+				dim3(results_d.size() / m, m),
+				BLOCK_DIM_X>>>(
+				k,
+				m,
+				n,
+				results_d.size(),
+				texObj,
+				thrust::raw_pointer_cast(results_d.data()));
+		}
+		thrust::copy(
+			results_d.begin(),
+			results_d.begin() + m,
+			*results = (int *)malloc(sizeof(int) * m));
+	}
+}; // namespace v6
 void cudaCallback(
 	int k,
 	int m,
@@ -466,7 +565,7 @@ void cudaCallback(
 	float *referencePoints,
 	int **results)
 {
-	v5::cudaCallback(
+	v6::cudaCallback(
 		k,
 		m,
 		n,
