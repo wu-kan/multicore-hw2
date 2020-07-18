@@ -1,21 +1,21 @@
--- The C compiler identification is GNU 4.8.5
--- The CXX compiler identification is GNU 4.8.5
+-- The C compiler identification is GNU 7.5.0
+-- The CXX compiler identification is GNU 7.5.0
 -- Check for working C compiler: /usr/bin/cc
--- Check for working C compiler: /usr/bin/cc -- works
+-- Check for working C compiler: /usr/bin/cc - works
 -- Detecting C compiler ABI info
 -- Detecting C compiler ABI info - done
 -- Detecting C compile features
 -- Detecting C compile features - done
 -- Check for working CXX compiler: /usr/bin/c++
--- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Check for working CXX compiler: /usr/bin/c++ - works
 -- Detecting CXX compiler ABI info
 -- Detecting CXX compiler ABI info - done
 -- Detecting CXX compile features
 -- Detecting CXX compile features - done
 -- Looking for pthread.h
 -- Looking for pthread.h - found
--- Looking for pthread_create
--- Looking for pthread_create - not found
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Failed
 -- Looking for pthread_create in pthreads
 -- Looking for pthread_create in pthreads - not found
 -- Looking for pthread_create in pthread
@@ -23,12 +23,18 @@
 -- Found Threads: TRUE  
 -- Configuring done
 -- Generating done
--- Build files have been written to: /GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build
+-- Build files have been written to: /home/jovyan/multicore-hw2/sources/build
+make[1]: Entering directory '/home/jovyan/multicore-hw2/sources/build'
+make[2]: Entering directory '/home/jovyan/multicore-hw2/sources/build'
 [ 33%] Building NVCC (Device) object CMakeFiles/main.dir/src/main_generated_main.cu.o
 [ 66%] Building NVCC (Device) object CMakeFiles/main.dir/src/main_generated_core.cu.o
 Scanning dependencies of target main
+make[2]: Leaving directory '/home/jovyan/multicore-hw2/sources/build'
+make[2]: Entering directory '/home/jovyan/multicore-hw2/sources/build'
 [100%] Linking CXX executable main
+make[2]: Leaving directory '/home/jovyan/multicore-hw2/sources/build'
 [100%] Built target main
+make[1]: Leaving directory '/home/jovyan/multicore-hw2/sources/build'
 Small sample 0:
 ---
 Search points:
@@ -38,7 +44,7 @@ Reference points:
 - 1: [ 1.00 1.00 0.50 ]
 Results:
 - 0 (0.374)
-cudaCallback: 0.001 ms
+cudaCallback: 383.832 ms
 
 
 Small sample 1:
@@ -58,36 +64,36 @@ Reference points:
 Results:
 - 2 (0.300)
 - 2 (0.510)
-cudaCallback: 0.001 ms
+cudaCallback: 0.429 ms
 
 
 Sample 2:
 ---
-cudaCallback: 0.008 ms
+cudaCallback: 0.353 ms
 
 
 Sample 3:
 ---
-cudaCallback: 0.398 ms
+cudaCallback: 0.709 ms
 
 
 Sample 4:
 ---
-cudaCallback: 0.669 ms
+cudaCallback: 1.577 ms
 
 
 Sample 5:
 ---
-cudaCallback: 2.913 ms
+cudaCallback: 50.181 ms
 
 
 Sample 6:
 ---
-cudaCallback: 188.271 ms
+cudaCallback: 55.455 ms
 
 
 Sample 7:
 ---
-cudaCallback: 699.186 ms
+cudaCallback: 61.548 ms
 
 
