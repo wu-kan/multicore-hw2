@@ -42,11 +42,11 @@ Search points:
 Reference points:
 - 0: [ 0.10 0.50 0.80 ]
 - 1: [ 1.00 1.00 0.50 ]
-0.010240
-0.097280
+0.008192
+0.871424
 Results:
 - 0 (0.374)
-cudaCallback: 418.785 ms
+cudaCallback: 395.592 ms
 
 
 Small sample 1:
@@ -63,53 +63,53 @@ Reference points:
 - 5: [ 0.60 0.90 0.80 ]
 - 6: [ 0.20 1.00 0.30 ]
 - 7: [ 0.00 1.00 0.30 ]
-0.008192
-0.160768
+0.006144
+0.437248
 Results:
 - 2 (0.300)
 - 2 (0.510)
-cudaCallback: 0.618 ms
+cudaCallback: 0.819 ms
 
 
 Sample 2:
 ---
-0.007168
-0.078848
-cudaCallback: 0.527 ms
+0.006144
+0.074752
+cudaCallback: 0.420 ms
 
 
 Sample 3:
 ---
 0.015360
-0.092160
-cudaCallback: 0.864 ms
+0.089088
+cudaCallback: 0.761 ms
 
 
 Sample 4:
 ---
 0.018432
-0.066560
-cudaCallback: 1.611 ms
+0.148480
+cudaCallback: 1.685 ms
 
 
 Sample 5:
 ---
 0.013312
-49.673218
-cudaCallback: 50.273 ms
+190.980103
+cudaCallback: 191.886 ms
 
 
 Sample 6:
 ---
-0.556032
-53.586945
-cudaCallback: 55.693 ms
+0.563200
+233.439240
+cudaCallback: 236.982 ms
 
 
 Sample 7:
 ---
-5.749760
-53.504002
-cudaCallback: 61.858 ms
+5.753856
+234.031097
+cudaCallback: 244.078 ms
 
 
