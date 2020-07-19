@@ -499,18 +499,18 @@ namespace v6
 {
 	static __global__ void
 	mat_inv_kernel(
-		const int m,
+		const int k,
 		const int n,
 		const float *__restrict__ input,
 		float *__restrict__ output)
 	{
 		const int
 			nInd = threadIdx.x + blockIdx.x * blockDim.x,
-			mInd = threadIdx.y + blockIdx.y * blockDim.y;
-		if (nInd < n && mInd < m)
+			kInd = threadIdx.y + blockIdx.y * blockDim.y;
+		if (nInd < n && kInd < k)
 		{
-			const float a = input[nInd * m + mInd];
-			output[nInd + mInd * n] = a;
+			const float a = input[nInd * k + kInd];
+			output[nInd + kInd * n] = a;
 		}
 	}
 	template <int BLOCK_DIM_X>
@@ -520,7 +520,6 @@ namespace v6
 		const int m,
 		const int n,
 		const int result_size,
-		const float *__restrict__ searchPoints,
 		const float *__restrict__ referencePoints,
 		int *__restrict__ result)
 	{
@@ -537,7 +536,7 @@ namespace v6
 			float dis = 0;
 			for (int kInd = 0; kInd < k; ++kInd)
 			{
-				const float d = searchPoints[kInd * m + mInd] - referencePoints[kInd * n + nInd];
+				const float d = const_mem[kInd + mInd * k] - referencePoints[kInd * n + nInd];
 				dis += d * d;
 			}
 			if (dis_s[threadIdx.x] > dis)
@@ -568,20 +567,14 @@ namespace v6
 		float *referencePoints,
 		int **results)
 	{
+		assert(k * m <= (64 << 10) / sizeof(float));
+		CHECK(cudaMemcpyToSymbol(const_mem, searchPoints, sizeof(float) * k * m));
 		thrust::device_vector<int> results_d(m);
-		thrust::device_vector<float> s_d(k * m), r_d(k * n);
+		thrust::device_vector<float> r_d(k * n);
 		{
 			thrust::device_vector<float>
-				ss_d(searchPoints, searchPoints + k * m),
 				rr_d(referencePoints, referencePoints + k * n);
 			const int BLOCK_DIM_X = 32, BLOCK_DIM_Y = 32;
-			mat_inv_kernel<<<
-				dim3(divup(m, BLOCK_DIM_X), divup(k, BLOCK_DIM_Y)),
-				dim3(BLOCK_DIM_X, BLOCK_DIM_Y)>>>(
-				k,
-				m,
-				thrust::raw_pointer_cast(ss_d.data()),
-				thrust::raw_pointer_cast(s_d.data()));
 			mat_inv_kernel<<<
 				dim3(divup(n, BLOCK_DIM_X), divup(k, BLOCK_DIM_Y)),
 				dim3(BLOCK_DIM_X, BLOCK_DIM_Y)>>>(
@@ -601,7 +594,6 @@ namespace v6
 				m,
 				n,
 				results_d.size(),
-				thrust::raw_pointer_cast(s_d.data()),
 				thrust::raw_pointer_cast(r_d.data()),
 				thrust::raw_pointer_cast(results_d.data()));
 		}
