@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <algorithm>
 #include <omp.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>

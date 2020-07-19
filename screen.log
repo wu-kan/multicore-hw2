@@ -37,35 +37,35 @@ make[2]: Leaving directory '/home/jovyan/multicore-hw2/sources/build'
 make[1]: Leaving directory '/home/jovyan/multicore-hw2/sources/build'
 
 
-Start benchmark with (k, m, n) = (16384, 1, 65536):
-
-Version 0: 1284.535645
-Version 1: 2972.364746
-Version 2: 1651.939087
-Version 3: 1733.756104
-Version 4: 1011.051208
-Version 5: 979.709595
-Version 6: 748.764648
-Version 7: 858.547607
-Version 8: 484.891785
-
-Finish benchmark with (k, m, n) = (16384, 1, 65536).
-
-
-
 Start benchmark with (k, m, n) = (16, 1024, 1048576):
 
-Version 0: 13234.269531
-Version 1: 526.316101
-Version 2: 146.432480
-Version 3: 128.240967
-Version 4: 40.972927
-Version 5: 42.806881
-Version 6: 55.733410
-Version 7: 39.564991
-Version 8: 20.547232
+Version 0: 12106.750977
+Version 1: 491.571106
+Version 2: 147.894424
+Version 3: 128.811646
+Version 4: 50.357822
+Version 5: 43.060608
+Version 6: 58.848095
+Version 7: 45.798401
+Version 8: 36.192638
 
 Finish benchmark with (k, m, n) = (16, 1024, 1048576).
+
+
+
+Start benchmark with (k, m, n) = (16384, 1, 65536):
+
+Version 0: 1252.945801
+Version 1: 931.073242
+Version 2: 1009.112549
+Version 3: 1767.255737
+Version 4: 1168.315186
+Version 5: 1265.517334
+Version 6: 1064.220459
+Version 7: 1129.782349
+Version 8: 398.604156
+
+Finish benchmark with (k, m, n) = (16384, 1, 65536).
 
 Small sample 0:
 ---
@@ -76,7 +76,7 @@ Reference points:
 - 1: [ 1.00 1.00 0.50 ]
 Results:
 - 0 (0.374)
-cudaCallback: 0.504 ms
+cudaCallback: 0.005 ms
 
 
 Small sample 1:
@@ -96,36 +96,36 @@ Reference points:
 Results:
 - 2 (0.300)
 - 2 (0.510)
-cudaCallback: 0.401 ms
+cudaCallback: 0.004 ms
 
 
 Sample 2:
 ---
-cudaCallback: 0.400 ms
+cudaCallback: 0.300 ms
 
 
 Sample 3:
 ---
-cudaCallback: 3.915 ms
+cudaCallback: 22.929 ms
 
 
 Sample 4:
 ---
-cudaCallback: 3.694 ms
+cudaCallback: 44.537 ms
 
 
 Sample 5:
 ---
-cudaCallback: 0.480 ms
+cudaCallback: 8.532 ms
 
 
 Sample 6:
 ---
-cudaCallback: 0.915 ms
+cudaCallback: 489.910 ms
 
 
 Sample 7:
 ---
-cudaCallback: 2.856 ms
+cudaCallback: 3548.181 ms
 
 

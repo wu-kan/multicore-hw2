@@ -962,6 +962,95 @@ namespace v8
 		}
 	}
 }; // namespace v8
+namespace v9
+{
+	float *searchPoints, *referencePoints;
+	int k;
+	struct DimCmp
+	{
+		int dim;
+		bool operator()(int lhs, int rhs) const
+		{
+			return referencePoints[lhs * k + dim] < referencePoints[rhs * k + dim];
+		}
+	};
+	struct KDTreeCPU
+	{
+		typedef float lf;
+		int n;
+		thrust::host_vector<int> p, dim;
+		KDTreeCPU(int n)
+			: n(n),
+			  p(n << 2, -1),
+			  dim(p)
+		{
+			thrust::host_vector<int> se(n);
+			for (int i = 0; i < n; ++i)
+				se[i] = i;
+			build(se.begin(), se.end());
+		}
+		void build(
+			thrust::host_vector<int>::iterator beg,
+			thrust::host_vector<int>::iterator end,
+			int rt = 1)
+		{
+			if (beg >= end)
+				return;
+			lf sa_max = -INFINITY;
+			for (int kInd = 0; kInd < k; ++kInd)
+			{
+				lf sum = 0, sa = 0;
+				for (thrust::host_vector<int>::iterator it = beg; it != end; ++it)
+				{
+					lf val = referencePoints[(*it) * k + kInd];
+					sum += val, sa += val * val;
+				}
+				sa = (sa - sum * sum / (end - beg)) / (end - beg);
+				if (sa_max < sa)
+					sa_max = sa, dim[rt] = kInd;
+			}
+			thrust::host_vector<int>::iterator mid = beg + (end - beg) / 2;
+			std::nth_element(beg, mid, end, DimCmp{dim[rt]});
+			p[rt] = *mid;
+			build(beg, mid, rt << 1);
+			build(++mid, end, rt << 1 | 1);
+		}
+		std::pair<lf, int> ask(int x, int rt = 1)
+		{
+			if (dim[rt] < 0)
+				return {INFINITY, 0};
+			int w = DimCmp{dim[rt]}(p[rt], x);
+			std::pair<lf, int> ans = ask(x, (rt << 1) ^ w);
+			lf tmp = 0;
+			for (int kInd = 0; kInd < k; ++kInd)
+			{
+				lf d = searchPoints[x * k + kInd] - referencePoints[p[rt] * k + kInd];
+				tmp += d * d;
+			}
+			ans = min(ans, {tmp, p[rt]});
+			lf d = searchPoints[x * k + dim[rt]] - referencePoints[p[rt] * k + dim[rt]];
+			if (ans.first > d * d - 1e-6)
+				ans = min(ans, ask(x, (rt << 1) ^ w ^ 1));
+			return ans;
+		}
+	};
+	static void cudaCallback(
+		int k,
+		int m,
+		int n,
+		float *searchPoints,
+		float *referencePoints,
+		int **results)
+	{
+		v9::k = k;
+		v9::searchPoints = searchPoints;
+		v9::referencePoints = referencePoints;
+		KDTreeCPU kd(n);
+		*results = (int *)malloc(sizeof(int) * m);
+		for (int i = 0; i < m; ++i)
+			(*results)[i] = kd.ask(i).second;
+	}
+} // namespace v9
 struct WarmUP
 {
 	WarmUP(int k, int m, int n)
@@ -975,7 +1064,8 @@ struct WarmUP
 			v5::cudaCallback,
 			v6::cudaCallback,
 			v7::cudaCallback,
-			v8::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
+			v8::cudaCallback,
+			v9::cudaCallback};
 		float *searchPoints = (float *)malloc(sizeof(float) * k * m);
 		float *referencePoints = (float *)malloc(sizeof(float) * k * n);
 
@@ -1013,7 +1103,7 @@ struct BenchMark
 			v5::cudaCallback,
 			v6::cudaCallback,
 			v7::cudaCallback,
-			v8::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
+			v8::cudaCallback};
 		float *searchPoints = (float *)malloc(sizeof(float) * k * m);
 		float *referencePoints = (float *)malloc(sizeof(float) * k * n);
 
@@ -1046,8 +1136,8 @@ struct BenchMark
 };
 static WarmUP warm_up(1, 1, 1048576);
 static BenchMark
-	benchmark1(16384, 1, 65536),
-	benchmark1024(16, 1024, 1048576);
+	benchmark1024(16, 1024, 1048576),
+	benchmark1(16384, 1, 65536);
 void cudaCallback(
 	int k,
 	int m,
@@ -1056,7 +1146,7 @@ void cudaCallback(
 	float *referencePoints,
 	int **results)
 {
-	v8::cudaCallback(
+	v9::cudaCallback(
 		k,
 		m,
 		n,
