@@ -1019,7 +1019,8 @@ namespace v9
 		{
 			if (dim[rt] < 0)
 				return {INFINITY, 0};
-			int w = DimCmp{dim[rt]}(p[rt], x);
+			lf d = searchPoints[x * k + dim[rt]] - referencePoints[p[rt] * k + dim[rt]];
+			int w = d > 0;
 			std::pair<lf, int> ans = ask(x, (rt << 1) ^ w);
 			lf tmp = 0;
 			for (int kInd = 0; kInd < k; ++kInd)
@@ -1028,7 +1029,6 @@ namespace v9
 				tmp += d * d;
 			}
 			ans = min(ans, {tmp, p[rt]});
-			lf d = searchPoints[x * k + dim[rt]] - referencePoints[p[rt] * k + dim[rt]];
 			if (ans.first > d * d - 1e-6)
 				ans = min(ans, ask(x, (rt << 1) ^ w ^ 1));
 			return ans;
