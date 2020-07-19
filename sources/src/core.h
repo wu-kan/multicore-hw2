@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <omp.h>
+#include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 
 // kernel is an element-wise kernel function for demonstrating purpose only.

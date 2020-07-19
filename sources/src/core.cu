@@ -82,13 +82,13 @@ namespace v1
 			mInd = threadIdx.y + blockIdx.y * blockDim.y;
 		if (nInd < n && mInd < m)
 		{
-			float ans = 0;
+			float squareSum = 0;
 			for (int kInd = 0; kInd < k; ++kInd)
 			{
-				const float d = searchPoints[kInd + mInd * k] - referencePoints[kInd + nInd * k];
-				ans += d * d;
+				const float diff = searchPoints[kInd + mInd * k] - referencePoints[kInd + nInd * k];
+				squareSum += diff * diff;
 			}
-			dis[nInd + mInd * n] = ans;
+			dis[nInd + mInd * n] = squareSum;
 		}
 	}
 	static void cudaCallback(
@@ -139,13 +139,13 @@ namespace v2
 			mInd = threadIdx.y + blockIdx.y * blockDim.y;
 		if (nInd < n && mInd < m)
 		{
-			float ans = 0;
+			float squareSum = 0;
 			for (int kInd = 0; kInd < k; ++kInd)
 			{
-				const float d = searchPoints[kInd + mInd * k] - referencePoints[kInd + nInd * k];
-				ans += d * d;
+				const float diff = searchPoints[kInd + mInd * k] - referencePoints[kInd + nInd * k];
+				squareSum += diff * diff;
 			}
-			dis[nInd + mInd * n] = ans;
+			dis[nInd + mInd * n] = squareSum;
 		}
 	}
 	template <int BLOCK_DIM_X>
@@ -167,10 +167,10 @@ namespace v2
 			 nInd < n;
 			 nInd += gridDim.x * BLOCK_DIM_X)
 		{
-			const float d = dis[nInd + blockIdx.y * n];
-			if (dis_s[threadIdx.x] > d)
+			const float squareSum = dis[nInd + blockIdx.y * n];
+			if (dis_s[threadIdx.x] > squareSum)
 			{
-				dis_s[threadIdx.x] = d;
+				dis_s[threadIdx.x] = squareSum;
 				ind_s[threadIdx.x] = nInd;
 			}
 		}
@@ -256,15 +256,15 @@ namespace v3
 			 nInd < n;
 			 nInd += gridDim.x * BLOCK_DIM_X)
 		{
-			float dis = 0;
+			float squareSum = 0;
 			for (int kInd = 0; kInd < k; ++kInd)
 			{
-				const float d = searchPoints[kInd + mInd * k] - referencePoints[kInd + nInd * k];
-				dis += d * d;
+				const float diff = searchPoints[kInd + mInd * k] - referencePoints[kInd + nInd * k];
+				squareSum += diff * diff;
 			}
-			if (dis_s[threadIdx.x] > dis)
+			if (dis_s[threadIdx.x] > squareSum)
 			{
-				dis_s[threadIdx.x] = dis;
+				dis_s[threadIdx.x] = squareSum;
 				ind_s[threadIdx.x] = nInd;
 			}
 		}
@@ -337,15 +337,15 @@ namespace v4
 			 nInd < n;
 			 nInd += gridDim.x * BLOCK_DIM_X)
 		{
-			float dis = 0;
+			float squareSum = 0;
 			for (int kInd = 0; kInd < k; ++kInd)
 			{
-				const float d = const_mem[kInd + mInd * k] - referencePoints[kInd + nInd * k];
-				dis += d * d;
+				const float diff = const_mem[kInd + mInd * k] - referencePoints[kInd + nInd * k];
+				squareSum += diff * diff;
 			}
-			if (dis_s[threadIdx.x] > dis)
+			if (dis_s[threadIdx.x] > squareSum)
 			{
-				dis_s[threadIdx.x] = dis;
+				dis_s[threadIdx.x] = squareSum;
 				ind_s[threadIdx.x] = nInd;
 			}
 		}
@@ -418,15 +418,15 @@ namespace v5
 			 nInd < n;
 			 nInd += gridDim.x * BLOCK_DIM_X)
 		{
-			float dis = 0;
+			float squareSum = 0;
 			for (int kInd = 0; kInd < k; ++kInd)
 			{
-				const float d = const_mem[kInd + mInd * k] - tex2D<float>(texObj, kInd, nInd);
-				dis += d * d;
+				const float diff = const_mem[kInd + mInd * k] - tex2D<float>(texObj, kInd, nInd);
+				squareSum += diff * diff;
 			}
-			if (dis_s[threadIdx.x] > dis)
+			if (dis_s[threadIdx.x] > squareSum)
 			{
-				dis_s[threadIdx.x] = dis;
+				dis_s[threadIdx.x] = squareSum;
 				ind_s[threadIdx.x] = nInd;
 			}
 		}
@@ -533,15 +533,15 @@ namespace v6
 			 nInd < n;
 			 nInd += gridDim.x * BLOCK_DIM_X)
 		{
-			float dis = 0;
+			float squareSum = 0;
 			for (int kInd = 0; kInd < k; ++kInd)
 			{
-				const float d = const_mem[kInd + mInd * k] - referencePoints[kInd * n + nInd];
-				dis += d * d;
+				const float diff = const_mem[kInd + mInd * k] - referencePoints[kInd * n + nInd];
+				squareSum += diff * diff;
 			}
-			if (dis_s[threadIdx.x] > dis)
+			if (dis_s[threadIdx.x] > squareSum)
 			{
-				dis_s[threadIdx.x] = dis;
+				dis_s[threadIdx.x] = squareSum;
 				ind_s[threadIdx.x] = nInd;
 			}
 		}
@@ -575,6 +575,7 @@ namespace v6
 			thrust::device_vector<float>
 				rr_d(referencePoints, referencePoints + k * n);
 			const int BLOCK_DIM_X = 32, BLOCK_DIM_Y = 32;
+			//WuKTimer t1;
 			mat_inv_kernel<<<
 				dim3(divup(n, BLOCK_DIM_X), divup(k, BLOCK_DIM_Y)),
 				dim3(BLOCK_DIM_X, BLOCK_DIM_Y)>>>(
@@ -585,7 +586,7 @@ namespace v6
 		}
 		{
 			const int BLOCK_DIM_X = 1024;
-			//WuKTimer t1;
+			//WuKTimer t2;
 			cudaCallbackKernel<
 				BLOCK_DIM_X><<<
 				dim3(results_d.size() / m, m),
@@ -603,6 +604,150 @@ namespace v6
 			*results = (int *)malloc(sizeof(int) * m));
 	}
 }; // namespace v6
+namespace v7
+{
+	static __global__ void
+	mat_inv_kernel(
+		const int k,
+		const int n,
+		const float *__restrict__ input,
+		float *__restrict__ output)
+	{
+		const int
+			nInd = threadIdx.x + blockIdx.x * blockDim.x,
+			kInd = threadIdx.y + blockIdx.y * blockDim.y;
+		if (nInd < n && kInd < k)
+		{
+			const float a = input[nInd * k + kInd];
+			output[nInd + kInd * n] = a;
+		}
+	}
+	template <int BLOCK_DIM_X>
+	static __global__ void
+	cudaCallbackKernel(
+		const int k,
+		const int m,
+		const int n,
+		const int result_size,
+		const float *__restrict__ referencePoints,
+		int *__restrict__ result)
+	{
+		const int ans_id = blockIdx.x + blockIdx.y * gridDim.x;
+		if (ans_id >= result_size)
+			return;
+		__shared__ float dis_s[BLOCK_DIM_X];
+		__shared__ int ind_s[BLOCK_DIM_X];
+		dis_s[threadIdx.x] = INFINITY;
+		ind_s[threadIdx.x] = 0;
+		for (int mInd = blockIdx.y, nInd = threadIdx.x + blockIdx.x * BLOCK_DIM_X;
+			 nInd < n;
+			 nInd += gridDim.x * BLOCK_DIM_X)
+		{
+			float squareSum = 0;
+			for (int kInd = 0; kInd < k; ++kInd)
+			{
+				const float diff = const_mem[kInd + mInd * k] - referencePoints[kInd * n + nInd];
+				squareSum += diff * diff;
+			}
+			if (dis_s[threadIdx.x] > squareSum)
+			{
+				dis_s[threadIdx.x] = squareSum;
+				ind_s[threadIdx.x] = nInd;
+			}
+		}
+		__syncthreads();
+		for (int offset = BLOCK_DIM_X >> 1; offset > 0; offset >>= 1)
+		{
+			if (threadIdx.x < offset)
+				if (dis_s[threadIdx.x] > dis_s[threadIdx.x ^ offset])
+				{
+					dis_s[threadIdx.x] = dis_s[threadIdx.x ^ offset];
+					ind_s[threadIdx.x] = ind_s[threadIdx.x ^ offset];
+				}
+			__syncthreads();
+		}
+		if (threadIdx.x == 0)
+			result[ans_id] = ind_s[0];
+	}
+	static void cudaCallback(
+		int k,
+		int m,
+		int n,
+		float *searchPoints,
+		float *referencePoints,
+		int **results)
+	{
+		assert(k * m <= (64 << 10) / sizeof(float));
+		CHECK(cudaMemcpyToSymbol(const_mem, searchPoints, sizeof(float) * k * m));
+		thrust::device_vector<float> r_d(k * n);
+		{
+			thrust::device_vector<float>
+				rr_d(referencePoints, referencePoints + k * n);
+			const int BLOCK_DIM_X = 32, BLOCK_DIM_Y = 32;
+			//WuKTimer t1;
+			mat_inv_kernel<<<
+				dim3(divup(n, BLOCK_DIM_X), divup(k, BLOCK_DIM_Y)),
+				dim3(BLOCK_DIM_X, BLOCK_DIM_Y)>>>(
+				k,
+				n,
+				thrust::raw_pointer_cast(rr_d.data()),
+				thrust::raw_pointer_cast(r_d.data()));
+		}
+		const int BLOCK_DIM_X = 1024;
+		int numBlocks;
+		CHECK(cudaOccupancyMaxActiveBlocksPerMultiprocessor(
+			&numBlocks,
+			cudaCallbackKernel<BLOCK_DIM_X>,
+			BLOCK_DIM_X,
+			0));
+		thrust::device_vector<int> results_d(m * divup(numBlocks, m));
+		{
+			//WuKTimer t2;
+			cudaCallbackKernel<
+				BLOCK_DIM_X><<<
+				dim3(results_d.size() / m, m),
+				BLOCK_DIM_X>>>(
+				k,
+				m,
+				n,
+				results_d.size(),
+				thrust::raw_pointer_cast(r_d.data()),
+				thrust::raw_pointer_cast(results_d.data()));
+		}
+		*results = (int *)malloc(sizeof(int) * m);
+		if (results_d.size() == m)
+		{
+			thrust::copy(
+				results_d.begin(),
+				results_d.begin() + m,
+				*results);
+			return;
+		}
+		thrust::host_vector<int> results_tmp(results_d);
+		for (int mInd = 0; mInd < m; ++mInd)
+		{
+			float minSquareSum = INFINITY;
+			int minIndex = 0;
+			// Iterate over all reference points
+			for (int len = results_tmp.size() / m, i = 0; i < len; ++i)
+			{
+				const int nInd = results_tmp[mInd * len + i];
+				float squareSum = 0;
+				for (int kInd = 0; kInd < k; ++kInd)
+				{
+					const float diff = searchPoints[k * mInd + kInd] - referencePoints[k * nInd + kInd];
+					squareSum += diff * diff;
+				}
+				if (minSquareSum > squareSum)
+				{
+					minSquareSum = squareSum;
+					minIndex = nInd;
+				}
+			}
+			(*results)[mInd] = minIndex;
+		}
+	}
+}; // namespace v7
 struct WarmUP
 {
 	WarmUP(int k, int m, int n)
@@ -614,7 +759,8 @@ struct WarmUP
 			v3::cudaCallback,
 			v4::cudaCallback,
 			v5::cudaCallback,
-			v6::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
+			v6::cudaCallback,
+			v7::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
 		float *searchPoints = (float *)malloc(sizeof(float) * k * m);
 		float *referencePoints = (float *)malloc(sizeof(float) * k * n);
 
@@ -657,7 +803,8 @@ struct BenchMark
 			v3::cudaCallback,
 			v4::cudaCallback,
 			v5::cudaCallback,
-			v6::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
+			v6::cudaCallback,
+			v7::cudaCallback}; //由于多卡版本是调用单卡版本实现的，因此无需热身
 		float *searchPoints = (float *)malloc(sizeof(float) * k * m);
 		float *referencePoints = (float *)malloc(sizeof(float) * k * n);
 
@@ -700,7 +847,7 @@ void cudaCallback(
 	float *referencePoints,
 	int **results)
 {
-	v6::cudaCallback(
+	v7::cudaCallback(
 		k,
 		m,
 		n,
