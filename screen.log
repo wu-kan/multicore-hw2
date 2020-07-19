@@ -39,31 +39,33 @@ make[1]: Leaving directory '/home/jovyan/multicore-hw2/sources/build'
 
 Start benchmark with (k, m, n) = (16384, 1, 65536):
 
-Version 0: 1307.126953
-Version 1: 2925.930908
-Version 2: 1393.373535
-Version 3: 1631.097900
-Version 4: 801.996765
-Version 5: 1012.263977
-Version 6: 764.218018
-Version 7: 795.565430
+Version 0: 1284.535645
+Version 1: 2972.364746
+Version 2: 1651.939087
+Version 3: 1733.756104
+Version 4: 1011.051208
+Version 5: 979.709595
+Version 6: 748.764648
+Version 7: 858.547607
+Version 8: 484.891785
 
 Finish benchmark with (k, m, n) = (16384, 1, 65536).
 
 
 
-Start benchmark with (k, m, n) = (16, 1024, 65536):
+Start benchmark with (k, m, n) = (16, 1024, 1048576):
 
-Version 0: 711.882568
-Version 1: 346.368896
-Version 2: 11.927936
-Version 3: 9.902304
-Version 4: 2.740160
-Version 5: 3.584704
-Version 6: 3.037504
-Version 7: 2.769280
+Version 0: 13234.269531
+Version 1: 526.316101
+Version 2: 146.432480
+Version 3: 128.240967
+Version 4: 40.972927
+Version 5: 42.806881
+Version 6: 55.733410
+Version 7: 39.564991
+Version 8: 20.547232
 
-Finish benchmark with (k, m, n) = (16, 1024, 65536).
+Finish benchmark with (k, m, n) = (16, 1024, 1048576).
 
 Small sample 0:
 ---
@@ -74,7 +76,7 @@ Reference points:
 - 1: [ 1.00 1.00 0.50 ]
 Results:
 - 0 (0.374)
-cudaCallback: 0.837 ms
+cudaCallback: 0.504 ms
 
 
 Small sample 1:
@@ -94,36 +96,36 @@ Reference points:
 Results:
 - 2 (0.300)
 - 2 (0.510)
-cudaCallback: 0.733 ms
+cudaCallback: 0.401 ms
 
 
 Sample 2:
 ---
-cudaCallback: 0.711 ms
+cudaCallback: 0.400 ms
 
 
 Sample 3:
 ---
-cudaCallback: 0.808 ms
+cudaCallback: 3.915 ms
 
 
 Sample 4:
 ---
-cudaCallback: 1.522 ms
+cudaCallback: 3.694 ms
 
 
 Sample 5:
 ---
-cudaCallback: 0.400 ms
+cudaCallback: 0.480 ms
 
 
 Sample 6:
 ---
-cudaCallback: 0.887 ms
+cudaCallback: 0.915 ms
 
 
 Sample 7:
 ---
-cudaCallback: 2.864 ms
+cudaCallback: 2.856 ms
 
 
