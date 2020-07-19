@@ -1,7 +1,5 @@
 #include "core.h"
 
-static __constant__ float const_mem[(64 << 10) / sizeof(float)];
-
 struct WuKTimer
 {
 	cudaEvent_t beg, end;
@@ -157,7 +155,7 @@ namespace v2
 		const float *__restrict__ dis,
 		int *__restrict__ result)
 	{
-		const int ans_id = blockIdx.x + blockIdx.y * gridDim.x;
+		const int ans_id = blockIdx.x * gridDim.y + blockIdx.y;
 		if (ans_id >= result_size)
 			return;
 		__shared__ float dis_s[BLOCK_DIM_X];
@@ -229,7 +227,7 @@ namespace v2
 		}
 		thrust::copy(
 			results_d.begin(),
-			results_d.begin() + m,
+			results_d.end(),
 			*results = (int *)malloc(sizeof(int) * m));
 	}
 }; // namespace v2
@@ -246,7 +244,7 @@ namespace v3
 		const float *__restrict__ referencePoints,
 		int *__restrict__ result)
 	{
-		const int ans_id = blockIdx.x + blockIdx.y * gridDim.x;
+		const int ans_id = blockIdx.x * gridDim.y + blockIdx.y;
 		if (ans_id >= result_size)
 			return;
 		__shared__ float dis_s[BLOCK_DIM_X];
@@ -311,12 +309,28 @@ namespace v3
 		}
 		thrust::copy(
 			results_d.begin(),
-			results_d.begin() + m,
+			results_d.end(),
 			*results = (int *)malloc(sizeof(int) * m));
 	}
 }; // namespace v3
 namespace v4
 {
+	static __global__ void
+	mat_inv_kernel(
+		const int k,
+		const int n,
+		const float *__restrict__ input,
+		float *__restrict__ output)
+	{
+		const int
+			nInd = threadIdx.x + blockIdx.x * blockDim.x,
+			kInd = threadIdx.y + blockIdx.y * blockDim.y;
+		if (nInd < n && kInd < k)
+		{
+			const float a = input[nInd * k + kInd];
+			output[nInd + kInd * n] = a;
+		}
+	}
 	template <int BLOCK_DIM_X>
 	static __global__ void
 	cudaCallbackKernel(
@@ -324,10 +338,11 @@ namespace v4
 		const int m,
 		const int n,
 		const int result_size,
+		const float *__restrict__ searchPoints,
 		const float *__restrict__ referencePoints,
 		int *__restrict__ result)
 	{
-		const int ans_id = blockIdx.x + blockIdx.y * gridDim.x;
+		const int ans_id = blockIdx.x * gridDim.y + blockIdx.y;
 		if (ans_id >= result_size)
 			return;
 		__shared__ float dis_s[BLOCK_DIM_X];
@@ -340,7 +355,7 @@ namespace v4
 			float squareSum = 0;
 			for (int kInd = 0; kInd < k; ++kInd)
 			{
-				const float diff = const_mem[kInd + mInd * k] - referencePoints[kInd + nInd * k];
+				const float diff = searchPoints[kInd + mInd * k] - referencePoints[kInd * n + nInd];
 				squareSum += diff * diff;
 			}
 			if (dis_s[threadIdx.x] > squareSum)
@@ -371,12 +386,24 @@ namespace v4
 		float *referencePoints,
 		int **results)
 	{
-		assert(k * m <= (64 << 10) / sizeof(float));
-		CHECK(cudaMemcpyToSymbol(const_mem, searchPoints, sizeof(float) * k * m));
 		thrust::device_vector<int> results_d(m);
+		thrust::device_vector<float>
+			s_d(searchPoints, searchPoints + k * m),
+			r_d(k * n);
 		{
 			thrust::device_vector<float>
-				r_d(referencePoints, referencePoints + k * n);
+				rr_d(referencePoints, referencePoints + k * n);
+			const int BLOCK_DIM_X = 32, BLOCK_DIM_Y = 32;
+			//WuKTimer t1;
+			mat_inv_kernel<<<
+				dim3(divup(n, BLOCK_DIM_X), divup(k, BLOCK_DIM_Y)),
+				dim3(BLOCK_DIM_X, BLOCK_DIM_Y)>>>(
+				k,
+				n,
+				thrust::raw_pointer_cast(rr_d.data()),
+				thrust::raw_pointer_cast(r_d.data()));
+		}
+		{
 			const int BLOCK_DIM_X = 1024;
 			//WuKTimer t1;
 			cudaCallbackKernel<
@@ -387,12 +414,13 @@ namespace v4
 				m,
 				n,
 				results_d.size(),
+				thrust::raw_pointer_cast(s_d.data()),
 				thrust::raw_pointer_cast(r_d.data()),
 				thrust::raw_pointer_cast(results_d.data()));
 		}
 		thrust::copy(
 			results_d.begin(),
-			results_d.begin() + m,
+			results_d.end(),
 			*results = (int *)malloc(sizeof(int) * m));
 	}
 }; // namespace v4
@@ -405,10 +433,11 @@ namespace v5
 		const int m,
 		const int n,
 		const int result_size,
+		const float *__restrict__ searchPoints,
 		cudaTextureObject_t texObj, //使用纹理对象
 		int *__restrict__ result)
 	{
-		const int ans_id = blockIdx.x + blockIdx.y * gridDim.x;
+		const int ans_id = blockIdx.x * gridDim.y + blockIdx.y;
 		if (ans_id >= result_size)
 			return;
 		__shared__ float dis_s[BLOCK_DIM_X];
@@ -421,7 +450,7 @@ namespace v5
 			float squareSum = 0;
 			for (int kInd = 0; kInd < k; ++kInd)
 			{
-				const float diff = const_mem[kInd + mInd * k] - tex2D<float>(texObj, kInd, nInd);
+				const float diff = searchPoints[kInd + mInd * k] - tex2D<float>(texObj, kInd, nInd);
 				squareSum += diff * diff;
 			}
 			if (dis_s[threadIdx.x] > squareSum)
@@ -452,8 +481,11 @@ namespace v5
 		float *referencePoints,
 		int **results)
 	{
-		assert(k * m <= (64 << 10) / sizeof(float));
-		CHECK(cudaMemcpyToSymbol(const_mem, searchPoints, sizeof(float) * k * m));
+		if (n > 65536)
+		{
+			v4::cudaCallback(k, m, n, searchPoints, referencePoints, results);
+			return;
+		}
 		cudaArray *cuArray;
 		cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<float>();
 		CHECK(cudaMallocArray(&cuArray, &channelDesc, k, n));
@@ -475,6 +507,8 @@ namespace v5
 		CHECK(cudaCreateTextureObject(&texObj, &resDesc, &texDesc, NULL));
 
 		thrust::device_vector<int> results_d(m);
+		thrust::device_vector<float>
+			s_d(searchPoints, searchPoints + k * m);
 		{
 			const int BLOCK_DIM_X = 1024;
 			//WuKTimer t1;
@@ -486,17 +520,19 @@ namespace v5
 				m,
 				n,
 				results_d.size(),
+				thrust::raw_pointer_cast(s_d.data()),
 				texObj,
 				thrust::raw_pointer_cast(results_d.data()));
 		}
 		thrust::copy(
 			results_d.begin(),
-			results_d.begin() + m,
+			results_d.end(),
 			*results = (int *)malloc(sizeof(int) * m));
 	}
 }; // namespace v5
 namespace v6
 {
+	static __constant__ float const_mem[(64 << 10) / sizeof(float)];
 	static __global__ void
 	mat_inv_kernel(
 		const int k,
@@ -523,7 +559,7 @@ namespace v6
 		const float *__restrict__ referencePoints,
 		int *__restrict__ result)
 	{
-		const int ans_id = blockIdx.x + blockIdx.y * gridDim.x;
+		const int ans_id = blockIdx.x * gridDim.y + blockIdx.y;
 		if (ans_id >= result_size)
 			return;
 		__shared__ float dis_s[BLOCK_DIM_X];
@@ -567,7 +603,11 @@ namespace v6
 		float *referencePoints,
 		int **results)
 	{
-		assert(k * m <= (64 << 10) / sizeof(float));
+		if (k * m > (64 << 10) / sizeof(float))
+		{
+			v4::cudaCallback(k, m, n, searchPoints, referencePoints, results);
+			return;
+		}
 		CHECK(cudaMemcpyToSymbol(const_mem, searchPoints, sizeof(float) * k * m));
 		thrust::device_vector<int> results_d(m);
 		thrust::device_vector<float> r_d(k * n);
@@ -600,7 +640,7 @@ namespace v6
 		}
 		thrust::copy(
 			results_d.begin(),
-			results_d.begin() + m,
+			results_d.end(),
 			*results = (int *)malloc(sizeof(int) * m));
 	}
 }; // namespace v6
@@ -629,10 +669,11 @@ namespace v7
 		const int m,
 		const int n,
 		const int result_size,
+		const float *__restrict__ searchPoints,
 		const float *__restrict__ referencePoints,
 		int *__restrict__ result)
 	{
-		const int ans_id = blockIdx.x + blockIdx.y * gridDim.x;
+		const int ans_id = blockIdx.x * gridDim.y + blockIdx.y;
 		if (ans_id >= result_size)
 			return;
 		__shared__ float dis_s[BLOCK_DIM_X];
@@ -646,7 +687,7 @@ namespace v7
 			float squareSum = 0;
 			for (int kInd = 0; kInd < k; ++kInd)
 			{
-				const float diff = const_mem[kInd + mInd * k] - referencePoints[kInd * n + nInd];
+				const float diff = searchPoints[kInd + mInd * k] - referencePoints[kInd * n + nInd];
 				squareSum += diff * diff;
 			}
 			if (dis_s[threadIdx.x] > squareSum)
@@ -677,9 +718,9 @@ namespace v7
 		float *referencePoints,
 		int **results)
 	{
-		assert(k * m <= (64 << 10) / sizeof(float));
-		CHECK(cudaMemcpyToSymbol(const_mem, searchPoints, sizeof(float) * k * m));
-		thrust::device_vector<float> r_d(k * n);
+		thrust::device_vector<float>
+			s_d(searchPoints, searchPoints + k * m),
+			r_d(k * n);
 		{
 			thrust::device_vector<float>
 				rr_d(referencePoints, referencePoints + k * n);
@@ -711,6 +752,7 @@ namespace v7
 				m,
 				n,
 				results_d.size(),
+				thrust::raw_pointer_cast(s_d.data()),
 				thrust::raw_pointer_cast(r_d.data()),
 				thrust::raw_pointer_cast(results_d.data()));
 		}
@@ -719,7 +761,7 @@ namespace v7
 		{
 			thrust::copy(
 				results_d.begin(),
-				results_d.begin() + m,
+				results_d.end(),
 				*results);
 			return;
 		}
@@ -729,9 +771,9 @@ namespace v7
 			float minSquareSum = INFINITY;
 			int minIndex = 0;
 			// Iterate over all reference points
-			for (int len = results_tmp.size() / m, i = 0; i < len; ++i)
+			for (int i = 0; i < results_tmp.size(); i += m)
 			{
-				const int nInd = results_tmp[mInd * len + i];
+				const int nInd = results_tmp[i];
 				float squareSum = 0;
 				for (int kInd = 0; kInd < k; ++kInd)
 				{
@@ -818,7 +860,7 @@ struct BenchMark
 			for (int i = 0; i < k * n; ++i)
 				referencePoints[i] = rand_r(&seed) / double(RAND_MAX);
 		}
-		printf("\n\nStart benchmark with (k, m, n) = %d, %d, %d:\n\n", k, m, n); //开始benchnmark
+		printf("\n\nStart benchmark with (k, m, n) = (%d, %d, %d):\n\n", k, m, n); //开始benchnmark
 		for (int i = 0; i < sizeof(cudaCallback) / sizeof(cudaCallback[0]); ++i)
 		{
 			int *result;
