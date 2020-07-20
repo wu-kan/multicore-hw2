@@ -37,17 +37,53 @@ make[2]: Leaving directory '/home/jovyan/multicore-hw2/sources/build'
 make[1]: Leaving directory '/home/jovyan/multicore-hw2/sources/build'
 
 
+---
+search on KD-Tree: 0.173184
+---
+
+
+
+Start benchmark with (k, m, n) = (2, 1024, 1048576):
+
+Version 0: 96.938850
+Version 1: 402.107483
+Version 2: 40.552544
+Version 3: 13.252480
+Version 4: 16.209791
+Version 5: 15.459136
+Version 6: 15.472288
+Version 7: 15.335392
+Version 8: 9.055296
+Version 9: 
+
+---
+search on KD-Tree: 0.943936
+---
+
+382.355011
+
+Finish benchmark with (k, m, n) = (2, 1024, 1048576).
+
+
+
 Start benchmark with (k, m, n) = (16, 1024, 1048576):
 
-Version 0: 12106.750977
-Version 1: 491.571106
-Version 2: 147.894424
-Version 3: 128.811646
-Version 4: 50.357822
-Version 5: 43.060608
-Version 6: 58.848095
-Version 7: 45.798401
-Version 8: 36.192638
+Version 0: 441.184418
+Version 1: 480.058624
+Version 2: 142.348221
+Version 3: 128.244095
+Version 4: 42.461025
+Version 5: 38.638081
+Version 6: 55.322529
+Version 7: 41.037727
+Version 8: 17.255808
+Version 9: 
+
+---
+search on KD-Tree: 5749.113281
+---
+
+7270.770508
 
 Finish benchmark with (k, m, n) = (16, 1024, 1048576).
 
@@ -55,15 +91,16 @@ Finish benchmark with (k, m, n) = (16, 1024, 1048576).
 
 Start benchmark with (k, m, n) = (16384, 1, 65536):
 
-Version 0: 1252.945801
-Version 1: 931.073242
-Version 2: 1009.112549
-Version 3: 1767.255737
-Version 4: 1168.315186
-Version 5: 1265.517334
-Version 6: 1064.220459
-Version 7: 1129.782349
-Version 8: 398.604156
+Version 0: 1253.033569
+Version 1: 589.612610
+Version 2: 681.201721
+Version 3: 1440.331787
+Version 4: 839.899902
+Version 5: 935.968506
+Version 6: 716.150024
+Version 7: 783.179932
+Version 8: 453.838654
+Version 9: 1268.525879
 
 Finish benchmark with (k, m, n) = (16384, 1, 65536).
 
@@ -76,7 +113,7 @@ Reference points:
 - 1: [ 1.00 1.00 0.50 ]
 Results:
 - 0 (0.374)
-cudaCallback: 0.005 ms
+cudaCallback: 6.746 ms
 
 
 Small sample 1:
@@ -96,36 +133,36 @@ Reference points:
 Results:
 - 2 (0.300)
 - 2 (0.510)
-cudaCallback: 0.004 ms
+cudaCallback: 0.822 ms
 
 
 Sample 2:
 ---
-cudaCallback: 0.300 ms
+cudaCallback: 0.790 ms
 
 
 Sample 3:
 ---
-cudaCallback: 22.929 ms
+cudaCallback: 8.464 ms
 
 
 Sample 4:
 ---
-cudaCallback: 44.537 ms
+cudaCallback: 5.880 ms
 
 
 Sample 5:
 ---
-cudaCallback: 8.532 ms
+cudaCallback: 0.465 ms
 
 
 Sample 6:
 ---
-cudaCallback: 489.910 ms
+cudaCallback: 0.922 ms
 
 
 Sample 7:
 ---
-cudaCallback: 3548.181 ms
+cudaCallback: 2.738 ms
 
 

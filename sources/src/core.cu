@@ -32,25 +32,23 @@ namespace v0
 		float *referencePoints,
 		int **results)
 	{
-
 		int *tmp = (int *)malloc(sizeof(int) * m);
-		int minIndex;
-		float minSquareSum, diff, squareSum;
-
 		// Iterate over all search points
-		for (int mInd = 0; mInd < m; mInd++)
+#pragma omp parallel for
+		for (int mInd = 0; mInd < m; ++mInd)
 		{
-			minSquareSum = -1;
+			float minSquareSum = INFINITY;
+			int minIndex = 0;
 			// Iterate over all reference points
-			for (int nInd = 0; nInd < n; nInd++)
+			for (int nInd = 0; nInd < n; ++nInd)
 			{
-				squareSum = 0;
-				for (int kInd = 0; kInd < k; kInd++)
+				float squareSum = 0;
+				for (int kInd = 0; kInd < k; ++kInd)
 				{
-					diff = searchPoints[k * mInd + kInd] - referencePoints[k * nInd + kInd];
-					squareSum += (diff * diff);
+					const float diff = searchPoints[k * mInd + kInd] - referencePoints[k * nInd + kInd];
+					squareSum += diff * diff;
 				}
-				if (minSquareSum < 0 || squareSum < minSquareSum)
+				if (minSquareSum > squareSum)
 				{
 					minSquareSum = squareSum;
 					minIndex = nInd;
@@ -1042,13 +1040,21 @@ namespace v9
 		float *referencePoints,
 		int **results)
 	{
+		if (k > 16)
+			return v0::cudaCallback(k, m, n, searchPoints, referencePoints, results);
 		v9::k = k;
 		v9::searchPoints = searchPoints;
 		v9::referencePoints = referencePoints;
 		KDTreeCPU kd(n);
 		*results = (int *)malloc(sizeof(int) * m);
-		for (int i = 0; i < m; ++i)
-			(*results)[i] = kd.ask(i).second;
+		printf("\n\n---\nsearch on KD-Tree: ");
+		{
+			WuKTimer timer;
+#pragma omp parallel for
+			for (int i = 0; i < m; ++i)
+				(*results)[i] = kd.ask(i).second;
+		}
+		printf("---\n\n");
 	}
 } // namespace v9
 struct WarmUP
@@ -1103,7 +1109,8 @@ struct BenchMark
 			v5::cudaCallback,
 			v6::cudaCallback,
 			v7::cudaCallback,
-			v8::cudaCallback};
+			v8::cudaCallback,
+			v9::cudaCallback};
 		float *searchPoints = (float *)malloc(sizeof(float) * k * m);
 		float *referencePoints = (float *)malloc(sizeof(float) * k * n);
 
@@ -1134,10 +1141,11 @@ struct BenchMark
 		free(referencePoints);
 	}
 };
-static WarmUP warm_up(1, 1, 1048576);
+static WarmUP warm_up(1, 1, 1 << 20);
 static BenchMark
-	benchmark1024(16, 1024, 1048576),
-	benchmark1(16384, 1, 65536);
+	benchmark2(2, 1024, 1 << 20),
+	benchmark16(16, 1024, 1 << 20),
+	benchmark16384(16384, 1, 1 << 16);
 void cudaCallback(
 	int k,
 	int m,
@@ -1146,7 +1154,7 @@ void cudaCallback(
 	float *referencePoints,
 	int **results)
 {
-	v9::cudaCallback(
+	v8::cudaCallback(
 		k,
 		m,
 		n,
