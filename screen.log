@@ -37,72 +37,67 @@ make[2]: Leaving directory '/home/jovyan/multicore-hw2/sources/build'
 make[1]: Leaving directory '/home/jovyan/multicore-hw2/sources/build'
 
 
----
-search on KD-Tree: 0.173184
----
+Start benchmark with (k, m, n) = (3, 1, 16777216):
+
+Version 0: 46.043743
+Version 1: 48.321377
+Version 2: 61.228161
+Version 3: 58.445663
+Version 4: 97.289246
+Version 5: 107.971481
+Version 6: 67.247620
+Version 7: 58.223648
+Version 8: 25.650145
+
+Finish benchmark with (k, m, n) = (3, 1, 16777216).
 
 
 
-Start benchmark with (k, m, n) = (2, 1024, 1048576):
+Start benchmark with (k, m, n) = (16, 1, 16777216):
 
-Version 0: 96.938850
-Version 1: 402.107483
-Version 2: 40.552544
-Version 3: 13.252480
-Version 4: 16.209791
-Version 5: 15.459136
-Version 6: 15.472288
-Version 7: 15.335392
-Version 8: 9.055296
-Version 9: 
+Version 0: 201.456345
+Version 1: 236.343750
+Version 2: 262.764587
+Version 3: 338.373627
+Version 4: 410.671204
+Version 5: 399.344299
+Version 6: 346.048981
+Version 7: 343.083435
+Version 8: 100.346466
 
----
-search on KD-Tree: 0.943936
----
+Finish benchmark with (k, m, n) = (16, 1, 16777216).
 
-382.355011
 
-Finish benchmark with (k, m, n) = (2, 1024, 1048576).
+
+Start benchmark with (k, m, n) = (3, 1024, 1048576):
+
+Version 0: 2804.438965
+Version 1: 384.369141
+Version 2: 40.040672
+Version 3: 14.915136
+Version 4: 17.889824
+Version 5: 18.035681
+Version 6: 17.655745
+Version 7: 20.012447
+Version 8: 9.970624
+
+Finish benchmark with (k, m, n) = (3, 1024, 1048576).
 
 
 
 Start benchmark with (k, m, n) = (16, 1024, 1048576):
 
-Version 0: 441.184418
-Version 1: 480.058624
-Version 2: 142.348221
-Version 3: 128.244095
-Version 4: 42.461025
-Version 5: 38.638081
-Version 6: 55.322529
-Version 7: 41.037727
-Version 8: 17.255808
-Version 9: 
-
----
-search on KD-Tree: 5749.113281
----
-
-7270.770508
+Version 0: 12104.106445
+Version 1: 488.961487
+Version 2: 148.049179
+Version 3: 128.129410
+Version 4: 46.449280
+Version 5: 47.161728
+Version 6: 64.689758
+Version 7: 48.638943
+Version 8: 17.292192
 
 Finish benchmark with (k, m, n) = (16, 1024, 1048576).
-
-
-
-Start benchmark with (k, m, n) = (16384, 1, 65536):
-
-Version 0: 1253.033569
-Version 1: 589.612610
-Version 2: 681.201721
-Version 3: 1440.331787
-Version 4: 839.899902
-Version 5: 935.968506
-Version 6: 716.150024
-Version 7: 783.179932
-Version 8: 453.838654
-Version 9: 1268.525879
-
-Finish benchmark with (k, m, n) = (16384, 1, 65536).
 
 Small sample 0:
 ---
@@ -113,7 +108,7 @@ Reference points:
 - 1: [ 1.00 1.00 0.50 ]
 Results:
 - 0 (0.374)
-cudaCallback: 6.746 ms
+cudaCallback: 0.929 ms
 
 
 Small sample 1:
@@ -133,36 +128,36 @@ Reference points:
 Results:
 - 2 (0.300)
 - 2 (0.510)
-cudaCallback: 0.822 ms
+cudaCallback: 0.620 ms
 
 
 Sample 2:
 ---
-cudaCallback: 0.790 ms
+cudaCallback: 0.600 ms
 
 
 Sample 3:
 ---
-cudaCallback: 8.464 ms
+cudaCallback: 1.832 ms
 
 
 Sample 4:
 ---
-cudaCallback: 5.880 ms
+cudaCallback: 3.294 ms
 
 
 Sample 5:
 ---
-cudaCallback: 0.465 ms
+cudaCallback: 0.403 ms
 
 
 Sample 6:
 ---
-cudaCallback: 0.922 ms
+cudaCallback: 0.925 ms
 
 
 Sample 7:
 ---
-cudaCallback: 2.738 ms
+cudaCallback: 2.689 ms
 
 

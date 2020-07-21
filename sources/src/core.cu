@@ -34,7 +34,6 @@ namespace v0
 	{
 		int *tmp = (int *)malloc(sizeof(int) * m);
 		// Iterate over all search points
-#pragma omp parallel for
 		for (int mInd = 0; mInd < m; ++mInd)
 		{
 			float minSquareSum = INFINITY;
@@ -764,7 +763,6 @@ namespace v7
 			return;
 		}
 		thrust::host_vector<int> results_tmp(results_d);
-#pragma omp parallel for
 		for (int mInd = 0; mInd < m; ++mInd)
 		{
 			float minSquareSum = INFINITY;
@@ -935,7 +933,6 @@ namespace v8
 				results_tmp[my_beg] += offset;
 		}
 		*results = (int *)malloc(sizeof(int) * m);
-#pragma omp parallel for
 		for (int mInd = 0; mInd < m; ++mInd)
 		{
 			float minSquareSum = INFINITY;
@@ -1050,7 +1047,6 @@ namespace v9
 		printf("\n\n---\nsearch on KD-Tree: ");
 		{
 			WuKTimer timer;
-#pragma omp parallel for
 			for (int i = 0; i < m; ++i)
 				(*results)[i] = kd.ask(i).second;
 		}
@@ -1109,8 +1105,7 @@ struct BenchMark
 			v5::cudaCallback,
 			v6::cudaCallback,
 			v7::cudaCallback,
-			v8::cudaCallback,
-			v9::cudaCallback};
+			v8::cudaCallback};
 		float *searchPoints = (float *)malloc(sizeof(float) * k * m);
 		float *referencePoints = (float *)malloc(sizeof(float) * k * n);
 
@@ -1143,9 +1138,10 @@ struct BenchMark
 };
 static WarmUP warm_up(1, 1, 1 << 20);
 static BenchMark
-	benchmark2(2, 1024, 1 << 20),
-	benchmark16(16, 1024, 1 << 20),
-	benchmark16384(16384, 1, 1 << 16);
+	benchmark8(3, 1, 1 << 24),
+	benchmark9(16, 1, 1 << 24),
+	benchmark10(3, 1024, 1 << 20),
+	benchmark11(16, 1024, 1 << 20);
 void cudaCallback(
 	int k,
 	int m,
