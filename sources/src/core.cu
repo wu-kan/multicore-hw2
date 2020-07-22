@@ -868,7 +868,7 @@ namespace v8
 			num_gpus = n;
 		if (num_gpus < 1)
 			return v0::cudaCallback(k, m, n, searchPoints, referencePoints, results);
-		if (n <= std::min(1 << 18, m << 10))
+		if (n <= thrust::min(1 << 18, m << 10))
 			return v7::cudaCallback(k, m, n, searchPoints, referencePoints, results);
 #pragma omp parallel num_threads(num_gpus)
 		{
@@ -971,17 +971,14 @@ namespace v9
 	};
 	struct KDTreeCPU
 	{
-		typedef float lf;
-		int n;
 		thrust::host_vector<int> p, dim;
 		KDTreeCPU(int n)
-			: n(n),
-			  p(n << 2, -1),
+			: p(n << 2, -1),
 			  dim(p)
 		{
-			thrust::host_vector<int> se(n);
-			for (int i = 0; i < n; ++i)
-				se[i] = i;
+			thrust::host_vector<int> se(
+				thrust::counting_iterator<int>(0),
+				thrust::counting_iterator<int>(n));
 			build(se.begin(), se.end());
 		}
 		void build(
@@ -991,13 +988,13 @@ namespace v9
 		{
 			if (beg >= end)
 				return;
-			lf sa_max = -INFINITY;
+			float sa_max = -INFINITY;
 			for (int kInd = 0; kInd < k; ++kInd)
 			{
-				lf sum = 0, sa = 0;
+				float sum = 0, sa = 0;
 				for (thrust::host_vector<int>::iterator it = beg; it != end; ++it)
 				{
-					lf val = referencePoints[(*it) * k + kInd];
+					float val = referencePoints[(*it) * k + kInd];
 					sum += val, sa += val * val;
 				}
 				sa = (sa - sum * sum / (end - beg)) / (end - beg);
@@ -1010,22 +1007,20 @@ namespace v9
 			build(beg, mid, rt << 1);
 			build(++mid, end, rt << 1 | 1);
 		}
-		std::pair<lf, int> ask(int x, int rt = 1)
+		thrust::pair<float, int> ask(int x, thrust::pair<float, int> ans = {INFINITY, 0}, int rt = 1)
 		{
 			if (dim[rt] < 0)
-				return {INFINITY, 0};
-			lf d = searchPoints[x * k + dim[rt]] - referencePoints[p[rt] * k + dim[rt]];
-			int w = d > 0;
-			std::pair<lf, int> ans = ask(x, (rt << 1) ^ w);
-			lf tmp = 0;
+				return ans;
+			float d = searchPoints[x * k + dim[rt]] - referencePoints[p[rt] * k + dim[rt]], tmp = 0;
 			for (int kInd = 0; kInd < k; ++kInd)
 			{
-				lf d = searchPoints[x * k + kInd] - referencePoints[p[rt] * k + kInd];
-				tmp += d * d;
+				float diff = searchPoints[x * k + kInd] - referencePoints[p[rt] * k + kInd];
+				tmp += diff * diff;
 			}
-			ans = min(ans, {tmp, p[rt]});
+			int w = d > 0;
+			ans = ask(x, min(ans, {tmp, p[rt]}), (rt << 1) ^ w);
 			if (ans.first > d * d - 1e-6)
-				ans = min(ans, ask(x, (rt << 1) ^ w ^ 1));
+				ans = ask(x, ans, (rt << 1) ^ w ^ 1);
 			return ans;
 		}
 	};
@@ -1053,6 +1048,147 @@ namespace v9
 		printf("---\n\n");
 	}
 } // namespace v9
+namespace v10
+{
+	__device__ thrust::pair<float, int> ask_device(
+		float *s_d,
+		float *r_d,
+		int *dim,
+		int *p,
+		int k,
+		int x,
+		thrust::pair<float, int> ans = {INFINITY, 0},
+		int rt = 1)
+	{
+		int dimrt = dim[rt];
+		if (dimrt < 0)
+			return ans;
+		int prt = p[rt];
+		if (prt < 0)
+			return ans;
+		float d = s_d[x * k + dimrt] - r_d[prt * k + dimrt], tmp = 0;
+		for (int kInd = 0; kInd < k; ++kInd)
+		{
+			float diff = s_d[x * k + kInd] - r_d[prt * k + kInd];
+			tmp += diff * diff;
+		}
+		int w = d > 0;
+		ans = ask_device(s_d, r_d, dim, p, k, x, thrust::min(ans, {tmp, prt}), (rt << 1) ^ w);
+		if (ans.first > d * d - 1e-6)
+			ans = ask_device(s_d, r_d, dim, p, k, x, ans, (rt << 1) ^ w ^ 1);
+		return ans;
+	}
+	__global__ void range_ask_kernel(
+		float *s_d,
+		float *r_d,
+		int *dim,
+		int *p,
+		int k,
+		int m,
+		int *results)
+	{
+		int global_id = blockIdx.x * blockDim.x + threadIdx.x;
+		if (global_id >= m)
+			return;
+		results[global_id] = ask_device(s_d, r_d, dim, p, k, global_id).second;
+	}
+	float *searchPoints, *referencePoints;
+	int k;
+	struct DimCmp
+	{
+		int dim;
+		bool operator()(int lhs, int rhs) const
+		{
+			return referencePoints[lhs * k + dim] < referencePoints[rhs * k + dim];
+		}
+	};
+	struct KDTreeGPU
+	{
+		thrust::host_vector<int> p, dim;
+		thrust::device_vector<int> p_d, dim_d;
+		thrust::device_vector<float> s_d, r_d;
+		KDTreeGPU(int n, int m)
+			: p(n << 2, -1),
+			  dim(p),
+			  s_d(searchPoints, searchPoints + k * m),
+			  r_d(referencePoints, referencePoints + k * n)
+		{
+			thrust::host_vector<int> se(
+				thrust::counting_iterator<int>(0),
+				thrust::counting_iterator<int>(n));
+			build(se.begin(), se.end());
+			dim_d = dim, p_d = p;
+		}
+		void build(
+			thrust::host_vector<int>::iterator beg,
+			thrust::host_vector<int>::iterator end,
+			int rt = 1)
+		{
+			if (beg >= end)
+				return;
+			float sa_max = -INFINITY;
+			for (int kInd = 0; kInd < k; ++kInd)
+			{
+				float sum = 0, sa = 0;
+				for (thrust::host_vector<int>::iterator it = beg; it != end; ++it)
+				{
+					float val = referencePoints[(*it) * k + kInd];
+					sum += val, sa += val * val;
+				}
+				sa = (sa - sum * sum / (end - beg)) / (end - beg);
+				if (sa_max < sa)
+					sa_max = sa, dim[rt] = kInd;
+			}
+			thrust::host_vector<int>::iterator mid = beg + (end - beg) / 2;
+			std::nth_element(beg, mid, end, DimCmp{dim[rt]});
+			p[rt] = *mid;
+			build(beg, mid, rt << 1);
+			build(++mid, end, rt << 1 | 1);
+		}
+		void range_ask(int m, int *results)
+		{
+			thrust::device_vector<int> results_d(m);
+			int minGridSize, blockSize;
+			CHECK(cudaOccupancyMaxPotentialBlockSize(
+				&minGridSize,
+				&blockSize,
+				range_ask_kernel));
+			range_ask_kernel<<<
+				divup(m, blockSize),
+				blockSize>>>(
+				thrust::raw_pointer_cast(s_d.data()),
+				thrust::raw_pointer_cast(r_d.data()),
+				thrust::raw_pointer_cast(dim_d.data()),
+				thrust::raw_pointer_cast(p_d.data()),
+				k,
+				m,
+				thrust::raw_pointer_cast(results_d.data()));
+			thrust::copy(results_d.begin(), results_d.end(), results);
+		}
+	};
+	static void cudaCallback(
+		int k,
+		int m,
+		int n,
+		float *searchPoints,
+		float *referencePoints,
+		int **results)
+	{
+		if (k > 16)
+			return v0::cudaCallback(k, m, n, searchPoints, referencePoints, results);
+		v10::k = k;
+		v10::searchPoints = searchPoints;
+		v10::referencePoints = referencePoints;
+		KDTreeGPU kd(n, m);
+		*results = (int *)malloc(sizeof(int) * m);
+		printf("\n\n---\nsearch on KD-Tree: ");
+		{
+			WuKTimer timer;
+			kd.range_ask(m, *results);
+		}
+		printf("---\n\n");
+	}
+} // namespace v10
 struct WarmUP
 {
 	WarmUP(int k, int m, int n)
@@ -1066,8 +1202,7 @@ struct WarmUP
 			v5::cudaCallback,
 			v6::cudaCallback,
 			v7::cudaCallback,
-			v8::cudaCallback,
-			v9::cudaCallback};
+			v8::cudaCallback};
 		float *searchPoints = (float *)malloc(sizeof(float) * k * m);
 		float *referencePoints = (float *)malloc(sizeof(float) * k * n);
 
