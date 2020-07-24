@@ -1,8 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/main.dir/src/main_generated_core.cu.o"
   "CMakeFiles/main.dir/src/main_generated_main.cu.o"
-  "main.pdb"
   "main"
+  "main.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

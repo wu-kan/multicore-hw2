@@ -1,51 +1,61 @@
-Determining if the pthread_create exist failed with the following output:
-Change Dir: /GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/CMakeTmp
+Performing C SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD failed with the following output:
+Change Dir: /home/jovyan/multicore-hw2/sources/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake cmTC_8a67e/fast 
-/usr/bin/gmake -f CMakeFiles/cmTC_8a67e.dir/build.make CMakeFiles/cmTC_8a67e.dir/build
-gmake[1]: Entering directory `/GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_8a67e.dir/CheckSymbolExists.c.o
-/usr/bin/cc   -fPIC    -o CMakeFiles/cmTC_8a67e.dir/CheckSymbolExists.c.o   -c /GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
-Linking C executable cmTC_8a67e
-/GPUFS/app_GPU/application/cmake/3.14.3/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8a67e.dir/link.txt --verbose=1
-/usr/bin/cc -fPIC     -rdynamic CMakeFiles/cmTC_8a67e.dir/CheckSymbolExists.c.o  -o cmTC_8a67e 
-CMakeFiles/cmTC_8a67e.dir/CheckSymbolExists.c.o: In function `main':
-CheckSymbolExists.c:(.text+0x1b): undefined reference to `pthread_create'
+Run Build Command(s):/opt/conda/bin/make cmTC_09c97/fast && /opt/conda/bin/make -f CMakeFiles/cmTC_09c97.dir/build.make CMakeFiles/cmTC_09c97.dir/build
+make[1]: Entering directory '/home/jovyan/multicore-hw2/sources/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_09c97.dir/src.c.o
+/usr/bin/cc   -fPIC -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_09c97.dir/src.c.o   -c /home/jovyan/multicore-hw2/sources/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_09c97
+/opt/conda/bin/cmake -E cmake_link_script CMakeFiles/cmTC_09c97.dir/link.txt --verbose=1
+/usr/bin/cc -fPIC -DCMAKE_HAVE_LIBC_PTHREAD    -rdynamic CMakeFiles/cmTC_09c97.dir/src.c.o  -o cmTC_09c97 
+CMakeFiles/cmTC_09c97.dir/src.c.o: In function `main':
+src.c:(.text+0x3e): undefined reference to `pthread_create'
+src.c:(.text+0x4a): undefined reference to `pthread_detach'
+src.c:(.text+0x56): undefined reference to `pthread_cancel'
+src.c:(.text+0x67): undefined reference to `pthread_join'
+src.c:(.text+0x7b): undefined reference to `pthread_atfork'
 collect2: error: ld returned 1 exit status
-gmake[1]: *** [cmTC_8a67e] Error 1
-gmake[1]: Leaving directory `/GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/CMakeTmp'
-gmake: *** [cmTC_8a67e/fast] Error 2
+make[1]: *** [CMakeFiles/cmTC_09c97.dir/build.make:104: cmTC_09c97] Error 1
+make[1]: Leaving directory '/home/jovyan/multicore-hw2/sources/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:138: cmTC_09c97/fast] Error 2
 
-File /GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
-/* */
+
+Source file was:
 #include <pthread.h>
 
-int main(int argc, char** argv)
+void* test_func(void* data)
 {
-  (void)argv;
-#ifndef pthread_create
-  return ((int*)(&pthread_create))[argc];
-#else
-  (void)argc;
+  return data;
+}
+
+int main(void)
+{
+  pthread_t thread;
+  pthread_create(&thread, NULL, test_func, NULL);
+  pthread_detach(thread);
+  pthread_cancel(thread);
+  pthread_join(thread, NULL);
+  pthread_atfork(NULL, NULL, NULL);
+  pthread_exit(NULL);
+
   return 0;
-#endif
 }
 
 Determining if the function pthread_create exists in the pthreads failed with the following output:
-Change Dir: /GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/CMakeTmp
+Change Dir: /home/jovyan/multicore-hw2/sources/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake cmTC_dba0c/fast 
-/usr/bin/gmake -f CMakeFiles/cmTC_dba0c.dir/build.make CMakeFiles/cmTC_dba0c.dir/build
-gmake[1]: Entering directory `/GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_dba0c.dir/CheckFunctionExists.c.o
-/usr/bin/cc   -fPIC -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_dba0c.dir/CheckFunctionExists.c.o   -c /GPUFS/app_GPU/application/cmake/3.14.3/share/cmake-3.14/Modules/CheckFunctionExists.c
-Linking C executable cmTC_dba0c
-/GPUFS/app_GPU/application/cmake/3.14.3/bin/cmake -E cmake_link_script CMakeFiles/cmTC_dba0c.dir/link.txt --verbose=1
-/usr/bin/cc -fPIC -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_dba0c.dir/CheckFunctionExists.c.o  -o cmTC_dba0c -lpthreads 
+Run Build Command(s):/opt/conda/bin/make cmTC_339b3/fast && /opt/conda/bin/make -f CMakeFiles/cmTC_339b3.dir/build.make CMakeFiles/cmTC_339b3.dir/build
+make[1]: Entering directory '/home/jovyan/multicore-hw2/sources/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_339b3.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -fPIC -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_339b3.dir/CheckFunctionExists.c.o   -c /opt/conda/share/cmake-3.17/Modules/CheckFunctionExists.c
+Linking C executable cmTC_339b3
+/opt/conda/bin/cmake -E cmake_link_script CMakeFiles/cmTC_339b3.dir/link.txt --verbose=1
+/usr/bin/cc -fPIC -DCHECK_FUNCTION_EXISTS=pthread_create    -rdynamic CMakeFiles/cmTC_339b3.dir/CheckFunctionExists.c.o  -o cmTC_339b3  -lpthreads 
 /usr/bin/ld: cannot find -lpthreads
 collect2: error: ld returned 1 exit status
-gmake[1]: *** [cmTC_dba0c] Error 1
-gmake[1]: Leaving directory `/GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/CMakeTmp'
-gmake: *** [cmTC_dba0c/fast] Error 2
+make[1]: *** [CMakeFiles/cmTC_339b3.dir/build.make:104: cmTC_339b3] Error 1
+make[1]: Leaving directory '/home/jovyan/multicore-hw2/sources/build/CMakeFiles/CMakeTmp'
+make: *** [Makefile:138: cmTC_339b3/fast] Error 2
+
 
 

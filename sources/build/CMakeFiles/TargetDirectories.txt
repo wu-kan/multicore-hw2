@@ -1,3 +1,3 @@
-/GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/rebuild_cache.dir
-/GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/edit_cache.dir
-/GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/main.dir
+/home/jovyan/multicore-hw2/sources/build/CMakeFiles/rebuild_cache.dir
+/home/jovyan/multicore-hw2/sources/build/CMakeFiles/main.dir
+/home/jovyan/multicore-hw2/sources/build/CMakeFiles/edit_cache.dir

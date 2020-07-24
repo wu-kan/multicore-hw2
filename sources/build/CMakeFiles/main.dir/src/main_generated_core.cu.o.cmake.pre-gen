@@ -57,29 +57,30 @@ if(NOT generated_file)
 endif()
 
 # Set these up as variables to make reading the generated file easier
-set(CMAKE_COMMAND "/GPUFS/app_GPU/application/cmake/3.14.3/bin/cmake") # path
-set(source_file "/GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/src/core.cu") # path
-set(NVCC_generated_dependency_file "/GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/main.dir/src/main_generated_core.cu.o.NVCC-depend") # path
-set(cmake_dependency_file "/GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/main.dir/src/main_generated_core.cu.o.depend") # path
-set(CUDA_make2cmake "/GPUFS/app_GPU/application/cmake/3.14.3/share/cmake-3.14/Modules/FindCUDA/make2cmake.cmake") # path
-set(CUDA_parse_cubin "/GPUFS/app_GPU/application/cmake/3.14.3/share/cmake-3.14/Modules/FindCUDA/parse_cubin.cmake") # path
+set(CMAKE_COMMAND "/opt/conda/bin/cmake") # path
+set(source_file "/home/jovyan/multicore-hw2/sources/src/core.cu") # path
+set(NVCC_generated_dependency_file "/home/jovyan/multicore-hw2/sources/build/CMakeFiles/main.dir/src/main_generated_core.cu.o.NVCC-depend") # path
+set(cmake_dependency_file "/home/jovyan/multicore-hw2/sources/build/CMakeFiles/main.dir/src/main_generated_core.cu.o.depend") # path
+set(CUDA_make2cmake "/opt/conda/share/cmake-3.17/Modules/FindCUDA/make2cmake.cmake") # path
+set(CUDA_parse_cubin "/opt/conda/share/cmake-3.17/Modules/FindCUDA/parse_cubin.cmake") # path
 set(build_cubin OFF) # bool
 set(CUDA_HOST_COMPILER "/usr/bin/cc") # path
 # We won't actually use these variables for now, but we need to set this, in
 # order to force this file to be run again if it changes.
-set(generated_file_path "/GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/main.dir/src/.") # path
-set(generated_file_internal "/GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/main.dir/src/./main_generated_core.cu.o") # path
-set(generated_cubin_file_internal "/GPUFS/sysu_hpcedu_302/asc20/WuK/multicore-hw2/sources/build/CMakeFiles/main.dir/src/./main_generated_core.cu.o.cubin.txt") # path
+set(generated_file_path "/home/jovyan/multicore-hw2/sources/build/CMakeFiles/main.dir/src/.") # path
+set(generated_file_internal "/home/jovyan/multicore-hw2/sources/build/CMakeFiles/main.dir/src/./main_generated_core.cu.o") # path
+set(generated_cubin_file_internal "/home/jovyan/multicore-hw2/sources/build/CMakeFiles/main.dir/src/./main_generated_core.cu.o.cubin.txt") # path
 
-set(CUDA_NVCC_EXECUTABLE "/GPUFS/app_GPU/compiler/CUDA/10.1.2/bin/nvcc") # path
-set(CUDA_NVCC_FLAGS -O3 -use_fast_math -Xcompiler -fopenmp ;; ) # list
+set(CUDA_NVCC_EXECUTABLE "/usr/local/cuda/bin/nvcc") # path
+set(CUDA_NVCC_FLAGS  -O3 -use_fast_math -Xcompiler -Ofast -Xcompiler -fopenmp ;; ) # list
 # Build specific configuration flags
 set(CUDA_NVCC_FLAGS_DEBUG  ; )
 set(CUDA_NVCC_FLAGS_MINSIZEREL  ; )
 set(CUDA_NVCC_FLAGS_RELEASE  ; )
 set(CUDA_NVCC_FLAGS_RELWITHDEBINFO  ; )
 set(nvcc_flags -m64) # list
-set(CUDA_NVCC_INCLUDE_DIRS "/GPUFS/app_GPU/compiler/CUDA/10.1.2/include;$<TARGET_PROPERTY:main,INCLUDE_DIRECTORIES>") # list (needs to be in quotes to handle spaces properly).
+set(CUDA_NVCC_INCLUDE_DIRS [==[/usr/local/cuda/include;$<TARGET_PROPERTY:main,INCLUDE_DIRECTORIES>]==]) # list (needs to be in lua quotes to address backslashes)
+string(REPLACE "\\" "/" CUDA_NVCC_INCLUDE_DIRS "${CUDA_NVCC_INCLUDE_DIRS}")
 set(CUDA_NVCC_COMPILE_DEFINITIONS [==[$<TARGET_PROPERTY:main,COMPILE_DEFINITIONS>]==]) # list (needs to be in lua quotes see #16510 ).
 set(format_flag "-c") # string
 set(cuda_language_flag ) # list
@@ -104,7 +105,7 @@ endif()
 
 # This is the list of host compilation flags.  It C or CXX should already have
 # been chosen by FindCUDA.cmake.
-set(CMAKE_HOST_FLAGS -Ofast -fopenmp )
+set(CMAKE_HOST_FLAGS  -Ofast -fopenmp )
 set(CMAKE_HOST_FLAGS_DEBUG -g)
 set(CMAKE_HOST_FLAGS_MINSIZEREL -Os -DNDEBUG)
 set(CMAKE_HOST_FLAGS_RELEASE -O3 -DNDEBUG)
@@ -181,7 +182,7 @@ endmacro()
 # Delete the target file
 cuda_execute_process(
   "Removing ${generated_file}"
-  COMMAND "${CMAKE_COMMAND}" -E remove "${generated_file}"
+  COMMAND "${CMAKE_COMMAND}" -E rm -f "${generated_file}"
   )
 
 # For CUDA 2.3 and below, -G -M doesn't work, so remove the -G flag
@@ -248,7 +249,7 @@ endif()
 # Delete the temporary file
 cuda_execute_process(
   "Removing ${cmake_dependency_file}.tmp and ${NVCC_generated_dependency_file}"
-  COMMAND "${CMAKE_COMMAND}" -E remove "${cmake_dependency_file}.tmp" "${NVCC_generated_dependency_file}"
+  COMMAND "${CMAKE_COMMAND}" -E rm -f "${cmake_dependency_file}.tmp" "${NVCC_generated_dependency_file}"
   )
 
 if(CUDA_result)
@@ -274,7 +275,7 @@ if(CUDA_result)
   # Since nvcc can sometimes leave half done files make sure that we delete the output file.
   cuda_execute_process(
     "Removing ${generated_file}"
-    COMMAND "${CMAKE_COMMAND}" -E remove "${generated_file}"
+    COMMAND "${CMAKE_COMMAND}" -E rm -f "${generated_file}"
     )
   message(FATAL_ERROR "Error generating file ${generated_file}")
 else()
