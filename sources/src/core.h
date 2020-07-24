@@ -17,8 +17,8 @@
 #define CALLBACK6 v5::cudaCallback
 #define CALLBACK7 v6::cudaCallback
 #define CALLBACK8 v7::cudaCallback
-#define CALLBACK9 v8::cudaCallback
-#define CALLBACK10 v9::cudaCallback
+#define CALLBACK9 v9::cudaCallback
+#define CALLBACK10 v8::cudaCallback // v8 is the best!
 
 // The main function would invoke the "cudaCallback"s on each sample. Note that
 // you don't have to (and shouldn't) free the space of searchPoints,

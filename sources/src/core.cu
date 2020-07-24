@@ -1039,13 +1039,13 @@ namespace v9
 		v9::referencePoints = referencePoints;
 		KDTreeCPU kd(n);
 		*results = (int *)malloc(sizeof(int) * m);
-		printf("\n\n---\nsearch on KD-Tree: ");
+		//printf("\n\n---\nsearch on KD-Tree: ");
 		{
 			//WuKTimer timer;
 			for (int i = 0; i < m; ++i)
 				(*results)[i] = kd.ask(i).second;
 		}
-		printf("---\n\n");
+		//printf("---\n\n");
 	}
 } // namespace v9
 namespace v10
