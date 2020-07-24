@@ -36,128 +36,246 @@ make[2]: Leaving directory '/home/jovyan/multicore-hw2/sources/build'
 [100%] Built target main
 make[1]: Leaving directory '/home/jovyan/multicore-hw2/sources/build'
 
+on running CALLBACK1...
+Callback1,  3,    1,     2,      0.001ms
+Callback1,  3,    2,     8,      0.001ms
+Callback1,  3,    1,  1024,      0.008ms
+Callback1,  3,    1, 65536,      0.501ms
+Callback1, 16,    1, 65536,      0.719ms
+Callback1,  3, 1024,  1024,      2.762ms
+Callback1,  3, 1024, 65536,    176.163ms
+Callback1, 16, 1024, 65536,    729.212ms
 
-Start benchmark with (k, m, n) = (3, 1, 16777216):
+on running CALLBACK2...
+Callback2,  3,    1,     2,      1.375ms
+errors/total w.r.t. baseline: 0/1
 
-Version 0: 46.043743
-Version 1: 48.321377
-Version 2: 61.228161
-Version 3: 58.445663
-Version 4: 97.289246
-Version 5: 107.971481
-Version 6: 67.247620
-Version 7: 58.223648
-Version 8: 25.650145
+Callback2,  3,    2,     8,      0.714ms
+errors/total w.r.t. baseline: 0/2
 
-Finish benchmark with (k, m, n) = (3, 1, 16777216).
+Callback2,  3,    1,  1024,      0.470ms
+errors/total w.r.t. baseline: 0/1
 
+Callback2,  3,    1, 65536,      0.854ms
+errors/total w.r.t. baseline: 0/1
 
+Callback2, 16,    1, 65536,      1.935ms
+errors/total w.r.t. baseline: 0/1
 
-Start benchmark with (k, m, n) = (16, 1, 16777216):
+Callback2,  3, 1024,  1024,    502.785ms
+errors/total w.r.t. baseline: 0/1024
 
-Version 0: 201.456345
-Version 1: 236.343750
-Version 2: 262.764587
-Version 3: 338.373627
-Version 4: 410.671204
-Version 5: 399.344299
-Version 6: 346.048981
-Version 7: 343.083435
-Version 8: 100.346466
+Callback2,  3, 1024, 65536,    306.302ms
+errors/total w.r.t. baseline: 0/1024
 
-Finish benchmark with (k, m, n) = (16, 1, 16777216).
-
-
-
-Start benchmark with (k, m, n) = (3, 1024, 1048576):
-
-Version 0: 2804.438965
-Version 1: 384.369141
-Version 2: 40.040672
-Version 3: 14.915136
-Version 4: 17.889824
-Version 5: 18.035681
-Version 6: 17.655745
-Version 7: 20.012447
-Version 8: 9.970624
-
-Finish benchmark with (k, m, n) = (3, 1024, 1048576).
+Callback2, 16, 1024, 65536,    311.936ms
+errors/total w.r.t. baseline: 0/1024
 
 
+on running CALLBACK3...
+Callback3,  3,    1,     2,      1.310ms
+errors/total w.r.t. baseline: 0/1
 
-Start benchmark with (k, m, n) = (16, 1024, 1048576):
+Callback3,  3,    2,     8,      1.020ms
+errors/total w.r.t. baseline: 0/2
 
-Version 0: 12104.106445
-Version 1: 488.961487
-Version 2: 148.049179
-Version 3: 128.129410
-Version 4: 46.449280
-Version 5: 47.161728
-Version 6: 64.689758
-Version 7: 48.638943
-Version 8: 17.292192
+Callback3,  3,    1,  1024,      1.007ms
+errors/total w.r.t. baseline: 0/1
 
-Finish benchmark with (k, m, n) = (16, 1024, 1048576).
+Callback3,  3,    1, 65536,      1.949ms
+errors/total w.r.t. baseline: 0/1
 
-Small sample 0:
----
-Search points:
-- [ 0.40 0.60 0.60 ]
-Reference points:
-- 0: [ 0.10 0.50 0.80 ]
-- 1: [ 1.00 1.00 0.50 ]
-Results:
-- 0 (0.374)
-cudaCallback: 0.929 ms
+Callback3, 16,    1, 65536,      1.203ms
+errors/total w.r.t. baseline: 0/1
 
+Callback3,  3, 1024,  1024,      0.892ms
+errors/total w.r.t. baseline: 0/1024
 
-Small sample 1:
----
-Search points:
-- [ 0.60 0.90 0.40 ]
-- [ 0.80 0.70 0.10 ]
-Reference points:
-- 0: [ 0.10 0.60 0.70 ]
-- 1: [ 0.70 0.80 0.80 ]
-- 2: [ 0.80 0.80 0.60 ]
-- 3: [ 0.70 0.30 0.70 ]
-- 4: [ 0.10 0.50 0.30 ]
-- 5: [ 0.60 0.90 0.80 ]
-- 6: [ 0.20 1.00 0.30 ]
-- 7: [ 0.00 1.00 0.30 ]
-Results:
-- 2 (0.300)
-- 2 (0.510)
-cudaCallback: 0.620 ms
+Callback3,  3, 1024, 65536,      2.652ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback3, 16, 1024, 65536,      8.627ms
+errors/total w.r.t. baseline: 0/1024
 
 
-Sample 2:
----
-cudaCallback: 0.600 ms
+on running CALLBACK4...
+Callback4,  3,    1,     2,      1.295ms
+errors/total w.r.t. baseline: 0/1
+
+Callback4,  3,    2,     8,      1.024ms
+errors/total w.r.t. baseline: 0/2
+
+Callback4,  3,    1,  1024,      1.008ms
+errors/total w.r.t. baseline: 0/1
+
+Callback4,  3,    1, 65536,      1.961ms
+errors/total w.r.t. baseline: 0/1
+
+Callback4, 16,    1, 65536,      1.592ms
+errors/total w.r.t. baseline: 0/1
+
+Callback4,  3, 1024,  1024,      0.365ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback4,  3, 1024, 65536,      1.475ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback4, 16, 1024, 65536,      7.813ms
+errors/total w.r.t. baseline: 0/1024
 
 
-Sample 3:
----
-cudaCallback: 1.832 ms
+on running CALLBACK5...
+Callback5,  3,    1,     2,      0.706ms
+errors/total w.r.t. baseline: 0/1
+
+Callback5,  3,    2,     8,      0.617ms
+errors/total w.r.t. baseline: 0/2
+
+Callback5,  3,    1,  1024,      0.747ms
+errors/total w.r.t. baseline: 0/1
+
+Callback5,  3,    1, 65536,      0.793ms
+errors/total w.r.t. baseline: 0/1
+
+Callback5, 16,    1, 65536,    119.017ms
+errors/total w.r.t. baseline: 0/1
+
+Callback5,  3, 1024,  1024,      0.693ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback5,  3, 1024, 65536,      1.118ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback5, 16, 1024, 65536,      2.967ms
+errors/total w.r.t. baseline: 0/1024
 
 
-Sample 4:
----
-cudaCallback: 3.294 ms
+on running CALLBACK6...
+Callback6,  3,    1,     2,      0.709ms
+errors/total w.r.t. baseline: 0/1
+
+Callback6,  3,    2,     8,      0.318ms
+errors/total w.r.t. baseline: 0/2
+
+Callback6,  3,    1,  1024,      0.318ms
+errors/total w.r.t. baseline: 0/1
+
+Callback6,  3,    1, 65536,      1.369ms
+errors/total w.r.t. baseline: 0/1
+
+Callback6, 16,    1, 65536,      1.149ms
+errors/total w.r.t. baseline: 0/1
+
+Callback6,  3, 1024,  1024,      0.374ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback6,  3, 1024, 65536,      1.980ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback6, 16, 1024, 65536,      3.981ms
+errors/total w.r.t. baseline: 0/1024
 
 
-Sample 5:
----
-cudaCallback: 0.403 ms
+on running CALLBACK7...
+Callback7,  3,    1,     2,      0.373ms
+errors/total w.r.t. baseline: 0/1
+
+Callback7,  3,    2,     8,      0.323ms
+errors/total w.r.t. baseline: 0/2
+
+Callback7,  3,    1,  1024,      0.318ms
+errors/total w.r.t. baseline: 0/1
+
+Callback7,  3,    1, 65536,      0.529ms
+errors/total w.r.t. baseline: 0/1
+
+Callback7, 16,    1, 65536,      1.532ms
+errors/total w.r.t. baseline: 0/1
+
+Callback7,  3, 1024,  1024,      0.356ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback7,  3, 1024, 65536,      0.907ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback7, 16, 1024, 65536,      3.205ms
+errors/total w.r.t. baseline: 0/1024
 
 
-Sample 6:
----
-cudaCallback: 0.925 ms
+on running CALLBACK8...
+Callback8,  3,    1,     2,      0.381ms
+errors/total w.r.t. baseline: 0/1
+
+Callback8,  3,    2,     8,      0.345ms
+errors/total w.r.t. baseline: 0/2
+
+Callback8,  3,    1,  1024,      0.337ms
+errors/total w.r.t. baseline: 0/1
+
+Callback8,  3,    1, 65536,      0.517ms
+errors/total w.r.t. baseline: 0/1
+
+Callback8, 16,    1, 65536,      1.487ms
+errors/total w.r.t. baseline: 0/1
+
+Callback8,  3, 1024,  1024,      0.370ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback8,  3, 1024, 65536,      0.913ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback8, 16, 1024, 65536,      2.903ms
+errors/total w.r.t. baseline: 0/1024
 
 
-Sample 7:
----
-cudaCallback: 2.689 ms
+on running CALLBACK9...
+Callback9,  3,    1,     2,      0.003ms
+errors/total w.r.t. baseline: 0/1
 
+Callback9,  3,    2,     8,      0.003ms
+errors/total w.r.t. baseline: 0/2
+
+Callback9,  3,    1,  1024,      0.207ms
+errors/total w.r.t. baseline: 0/1
+
+Callback9,  3,    1, 65536,     20.291ms
+errors/total w.r.t. baseline: 0/1
+
+Callback9, 16,    1, 65536,     42.981ms
+errors/total w.r.t. baseline: 0/1
+
+Callback9,  3, 1024,  1024,      0.643ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback9,  3, 1024, 65536,     19.237ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback9, 16, 1024, 65536,   2405.845ms
+errors/total w.r.t. baseline: 0/1024
+
+
+on running CALLBACK10...
+Callback10,  3,    1,     2,      0.666ms
+errors/total w.r.t. baseline: 0/1
+
+Callback10,  3,    2,     8,      0.345ms
+errors/total w.r.t. baseline: 0/2
+
+Callback10,  3,    1,  1024,      0.350ms
+errors/total w.r.t. baseline: 0/1
+
+Callback10,  3,    1, 65536,      2.543ms
+errors/total w.r.t. baseline: 0/1
+
+Callback10, 16,    1, 65536,      2.879ms
+errors/total w.r.t. baseline: 0/1
+
+Callback10,  3, 1024,  1024,      0.374ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback10,  3, 1024, 65536,      0.920ms
+errors/total w.r.t. baseline: 0/1024
+
+Callback10, 16, 1024, 65536,      2.897ms
+errors/total w.r.t. baseline: 0/1024
 

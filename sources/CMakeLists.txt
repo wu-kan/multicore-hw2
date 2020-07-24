@@ -3,7 +3,7 @@ find_package(CUDA QUIET REQUIRED)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Ofast -fopenmp")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -fopenmp")
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3 -use_fast_math -Xcompiler -fopenmp")
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3 -use_fast_math -Xcompiler -Ofast -Xcompiler -fopenmp")
 
 file(GLOB SOURCES
     "src/*.h"
