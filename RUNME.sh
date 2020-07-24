@@ -11,10 +11,7 @@ mkdir -p sources/build
 cd sources/build
 rm -fr *
 
-cmake ..  \
-    -DCMAKE_C_FLAGS="-Ofast -fopenmp" \
-    -DCMAKE_CXX_FLAGS="-Ofast -fopenmp" \
-    -DCUDA_NVCC_FLAGS="-O3 -use_fast_math -Xcompiler -fopenmp"
+cmake ..
 make
 
 cd ../..

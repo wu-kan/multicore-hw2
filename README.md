@@ -80,7 +80,7 @@ v1 版本是我实现的 CUDA 上的 baseline 版本，下面对其逻辑稍作�
 
 对于第一阶段计算距离矩阵，我实现了一个核函数 `get_dis_kernel`，将线程按照 $32\times 32$ 分块并一一映射到距离矩阵的每个位置上。作为 baseline 版本，此处每个线程都直接使用串行逻辑，线程之间没有交互。由于第一阶段程序用时实际上相当小（见下），此处暂且不对 blockDim 的大小进行调整，直接按照经验选择了 1024。
 
-对于第二阶段求距离矩阵最小点，实际上是一个非常经典的区间规约问题，我已经在 CUDA-8 这一节课上讲过对应的优化方法。当然，还是有一些小的区别，课件上的规约操作是求和，而我这里是区间最小值点下标。恰好 thrust 库中也有封装好的算法 `thrust::min_element` ，我这里直接用其作为实现，也可作为后续优化的标杆。
+对于第二阶段求距离矩阵最小点，实际上是一个非常经典的区间规约问题，我已经在 CUDA-8 这一节课上学过对应的优化方法。当然，还是有一些小的区别，课件上的规约操作是求和，而我这里是区间最小值点下标。恰好 thrust 库中也有封装好的算法 `thrust::min_element` ，我这里直接用其作为实现，也可作为后续优化的标杆。
 
 v1 版本中有一个 `cudaCallback` 函数作为外部调用的接口，还有一个 `get_dis_kernel` 核函数用于计算上文提到的距离矩阵。
 
@@ -178,18 +178,12 @@ v8 版本和 v7 版本的任务划分方式完全相同，只不过要先通过�
 
 ### 测试方法
 
-测试使用的编译指令如下（打开所有编译优化）：
+测试使用的编译指令如下（打开所有常见编译优化）：
 
-```bash
-mkdir -p sources/build
-cd sources/build
-rm -fr *
-
-cmake ..  \
-    -DCMAKE_C_FLAGS="-Ofast -fopenmp" \
-    -DCMAKE_CXX_FLAGS="-Ofast -fopenmp" \
-    -DCUDA_NVCC_FLAGS="-O3 -use_fast_math -Xcompiler -fopenmp"
-make
+```cmake
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Ofast -fopenmp")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -fopenmp")
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3 -use_fast_math -Xcompiler -fopenmp")
 ```
 
 TA 提供的几组测试数据如下：

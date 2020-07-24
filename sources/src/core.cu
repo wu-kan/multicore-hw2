@@ -24,7 +24,7 @@ struct WuKTimer
 };
 namespace v0
 {
-	static void cudaCallback(
+	extern void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -63,7 +63,7 @@ namespace v0
 } // namespace v0
 namespace v1
 {
-	static __global__ void
+	extern __global__ void
 	get_dis_kernel(
 		const int k,
 		const int m,
@@ -86,7 +86,7 @@ namespace v1
 			dis[nInd + mInd * n] = squareSum;
 		}
 	}
-	static void cudaCallback(
+	extern void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -183,7 +183,7 @@ namespace v2
 		if (threadIdx.x == 0)
 			result[ans_id] = ind_s[0];
 	}
-	static void cudaCallback(
+	extern void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -277,7 +277,7 @@ namespace v3
 		if (threadIdx.x == 0)
 			result[ans_id] = ind_s[0];
 	}
-	static void cudaCallback(
+	extern void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -375,7 +375,7 @@ namespace v4
 		if (threadIdx.x == 0)
 			result[ans_id] = ind_s[0];
 	}
-	static void cudaCallback(
+	extern void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -470,7 +470,7 @@ namespace v5
 		if (threadIdx.x == 0)
 			result[ans_id] = ind_s[0];
 	}
-	static void cudaCallback(
+	extern void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -592,7 +592,7 @@ namespace v6
 		if (threadIdx.x == 0)
 			result[ans_id] = ind_s[0];
 	}
-	static void cudaCallback(
+	extern void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -707,7 +707,7 @@ namespace v7
 		if (threadIdx.x == 0)
 			result[ans_id] = ind_s[0];
 	}
-	static void cudaCallback(
+	extern void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -853,7 +853,7 @@ namespace v8
 		if (threadIdx.x == 0)
 			result[ans_id] = ind_s[0];
 	}
-	static void cudaCallback(
+	extern void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -1024,7 +1024,7 @@ namespace v9
 			return ans;
 		}
 	};
-	static void cudaCallback(
+	extern void cudaCallback(
 		int k,
 		int m,
 		int n,
@@ -1041,7 +1041,7 @@ namespace v9
 		*results = (int *)malloc(sizeof(int) * m);
 		printf("\n\n---\nsearch on KD-Tree: ");
 		{
-			WuKTimer timer;
+			//WuKTimer timer;
 			for (int i = 0; i < m; ++i)
 				(*results)[i] = kd.ask(i).second;
 		}
@@ -1183,7 +1183,7 @@ namespace v10
 		*results = (int *)malloc(sizeof(int) * m);
 		printf("\n\n---\nsearch on KD-Tree: ");
 		{
-			WuKTimer timer;
+			//WuKTimer timer;
 			kd.range_ask(m, *results);
 		}
 		printf("---\n\n");
@@ -1272,12 +1272,14 @@ struct BenchMark
 	}
 };
 static WarmUP warm_up(1, 1, 1 << 20);
+/*
 static BenchMark
 	benchmark8(3, 1, 1 << 24),
 	benchmark9(16, 1, 1 << 24),
 	benchmark10(3, 1024, 1 << 20),
 	benchmark11(16, 1024, 1 << 20);
-void cudaCallback(
+*/
+extern void cudaCallback(
 	int k,
 	int m,
 	int n,
