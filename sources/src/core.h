@@ -9,16 +9,16 @@
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 
-#define CALLBACK1 v0::cudaCallbackCPU
-#define CALLBACK2 v1::cudaCallbackCPU
-#define CALLBACK3 v2::cudaCallbackCPU
-#define CALLBACK4 v3::cudaCallbackCPU
-#define CALLBACK5 v4::cudaCallbackCPU
-#define CALLBACK6 v5::cudaCallbackCPU
-#define CALLBACK7 v6::cudaCallbackCPU
-#define CALLBACK8 v7::cudaCallbackCPU
-#define CALLBACK9 v8::cudaCallbackCPU
-#define CALLBACK10 v9::cudaCallbackCPU
+#define CALLBACK1 v0::cudaCallback
+#define CALLBACK2 v1::cudaCallback
+#define CALLBACK3 v2::cudaCallback
+#define CALLBACK4 v3::cudaCallback
+#define CALLBACK5 v4::cudaCallback
+#define CALLBACK6 v5::cudaCallback
+#define CALLBACK7 v6::cudaCallback
+#define CALLBACK8 v7::cudaCallback
+#define CALLBACK9 v8::cudaCallback
+#define CALLBACK10 v9::cudaCallback
 
 // The main function would invoke the "cudaCallback"s on each sample. Note that
 // you don't have to (and shouldn't) free the space of searchPoints,
